@@ -1,179 +1,441 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Snake Game</title>
-  <style>
-    body {
-      background: #000;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      font-family: Arial, sans-serif;
-      color: #0f0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pibble Clicker!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        #clicker-square {
+            transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+            cursor: pointer;
+            user-select: none;
+            will-change: transform;
+            object-fit: contain;
+            position: relative; 
+            z-index: 30; 
+        }
 
-    #score-container {
-      font-size: 24px;
-      margin-bottom: 15px;
-      color: #0f0;
-      font-weight: bold;
-      text-align: center;
-    }
+        .clicked {
+            transform: scale(0.95) rotate(-30deg);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
 
-    canvas {
-      background: #111;
-      border: 2px solid #0f0;
-    }
+        .tab-active {
+            background-color: #f59e0b !important;
+            color: #1e3a8a;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
 
-    .controls {
-      margin-top: 20px;
-      display: flex;
-      gap: 15px;
-      align-items: center;
-    }
+        html, body {
+            height: 100%;
+        }
 
-    button, select {
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #0f0;
-      border: none;
-      color: #000;
-      cursor: pointer;
-      border-radius: 5px;
-    }
+        body {
+            background-color: #0b1a3d;
+            background-image: radial-gradient(at 50% 10%, #1e3a8a, #0b1a3d, #030712);
+        }
 
-    button:hover, select:hover {
-      background-color: #0c0;
-    }
-  </style>
+        @keyframes strong-wind-left {
+            0% {
+                transform: translateX(0) scaleX(1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateX(30%) scaleX(0.05); 
+                opacity: 0;
+            }
+        }
+        
+        @keyframes strong-wind-right {
+            0% {
+                transform: translateX(0) scaleX(1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateX(-30%) scaleX(0.05); 
+                opacity: 0;
+            }
+        }
+
+        .wind-line {
+            position: absolute;
+            width: 120px; 
+            height: 4px;
+            background: rgba(255, 255, 255, 1);
+            border-radius: 2px;
+            pointer-events: none;
+            z-index: 20; 
+        }
+
+        .wind-line.left {
+            animation: strong-wind-left 0.7s infinite linear;
+            transform-origin: left center;
+        }
+        #line-1 { top: 15%; left: -30%; animation-delay: 0s; }
+        #line-2 { top: 45%; left: -20%; animation-delay: 0.2s; width: 100px; }
+        #line-3 { top: 75%; left: -35%; animation-delay: 0.4s; background: rgba(255, 255, 255, 0.7); width: 140px; }
+
+
+        .wind-line.right {
+            animation: strong-wind-right 0.7s infinite linear;
+            transform-origin: right center;
+        }
+        #line-4 { top: 15%; right: -30%; animation-delay: 0.1s; }
+        #line-5 { top: 45%; right: -20%; animation-delay: 0.3s; width: 100px; }
+        #line-6 { top: 75%; right: -35%; animation-delay: 0.5s; background: rgba(255, 255, 255, 0.7); width: 140px; }
+
+    </style>
 </head>
-<body>
-  <div id="score-container">Score: <span id="score">0</span></div>
+<body class="text-white font-sans flex flex-col items-center min-h-screen p-4">
 
-  <canvas id="game" width="400" height="400"></canvas>
+    <header class="w-full flex justify-between items-start pt-6 pb-8 relative">
+        
+        <div id="money-box" class="flex flex-col items-start space-y-0.5">
+            <p class="text-xl font-medium text-blue-300">PibbCoins:</p>
+            <p id="money-display" class="text-5xl font-mono text-lime-400">
+                0.0
+            </p>
+        </div>
 
-  <div class="controls">
-    <select id="difficulty" aria-label="Select Difficulty">
-      <option value="150">Easy</option>
-      <option value="100" selected>Medium</option>
-      <option value="60">Hard</option>
-    </select>
-    <button onclick="startGame()">Start Game</button>
-  </div>
+        <div class="absolute inset-x-0 top-0 pt-6 text-center pointer-events-none">
+             <div class="flex flex-col items-center">
+                 <div class="flex justify-center items-center">
+                     <div class="w-10 h-10 bg-amber-500 rounded-lg shadow-xl flex items-center justify-center p-1 pointer-events-auto border-2 border-amber-300 mr-2">
+                         <img
+                             src="https://raw.githubusercontent.com/ILoveGothsAndChicken/A-School/main/Pibble%20coin.png"
+                             alt="Pibble Coin Icon"
+                             class="w-full h-full object-contain"
+                         />
+                     </div>
+                     <h1 class="text-3xl font-extrabold tracking-tight text-blue-300 sm:text-4xl pointer-events-auto">
+                         The Pibble Clicker
+                     </h1>
+                 </div>
+                 
+                 <div id="pcs-box" class="flex items-baseline space-x-2 mt-4 pointer-events-auto">
+                    <p class="text-2xl font-bold text-fuchsia-300">PCS:</p>
+                    <p id="pcs-display" class="text-3xl font-mono text-fuchsia-400">
+                        0.0
+                    </p>
+                </div>
+             </div>
+        </div>
+        
+        <button id="purchases-button" class="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded-lg font-semibold text-sm transition duration-150 shadow-lg border border-blue-500 mt-2">
+            Purchases
+        </button>
 
-  <script>
-    const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
+    </header>
 
-    const scoreDisplay = document.getElementById("score");
-    const difficultySelect = document.getElementById("difficulty");
+    <main class="w-full max-w-xl flex flex-col items-center space-y-12 flex-grow mt-24">
+        
+        <div id="clicker-view" class="w-full flex flex-col items-center space-y-12">
+            
+            <div class="relative">
+                <img
+                    id="clicker-square"
+                    class="w-48 h-48 sm:w-64 sm:h-64 rounded-xl shadow-2xl border-4 border-blue-300 bg-gray-700 p-2 relative"
+                    role="button"
+                    aria-label="Click to earn money"
+                    src="https://raw.githubusercontent.com/ILoveGothsAndChicken/A-School/main/Perfect.png"
+                    alt="Clickable Item"
+                />
+                <div id="line-1" class="wind-line left"></div>
+                <div id="line-2" class="wind-line left"></div>
+                <div id="line-3" class="wind-line left"></div>
+                <div id="line-4" class="wind-line right"></div>
+                <div id="line-5" class="wind-line right"></div>
+                <div id="line-6" class="wind-line right"></div>
+            </div>
 
-    const gridSize = 20;
-    const tileCount = canvas.width / gridSize;
+        </div>
+        
+        <div id="purchases-view" class="w-full h-full p-4 hidden">
+            <h2 id="purchases-title" class="text-3xl font-bold text-blue-300 mb-6 text-center">Store</h2>
+            
+            <div class="flex justify-center space-x-4 mb-8">
+                <button id="tab-store" class="tab-button px-6 py-3 bg-blue-700 hover:bg-blue-600 rounded-lg font-bold shadow-xl transition duration-150 tab-active">Store</button>
+                <button id="tab-upgrades" class="tab-button px-6 py-3 bg-blue-700 hover:bg-blue-600 rounded-lg font-semibold shadow-xl transition duration-150">Upgrades</button>
+            </div>
+            
+            <div id="tab-content-container" class="bg-blue-800 p-6 rounded-xl shadow-inner border border-blue-600 min-h-[200px] flex flex-col space-y-4">
+                <div id="store-content">
+                    
+                    <div id="pcs-increaser-item-1" class="flex justify-between items-center bg-blue-700 p-3 rounded-lg shadow-md">
+                        <div>
+                            <p class="text-xl font-bold">Pibble Washer I (1x)</p>
+                            <p class="text-sm text-fuchsia-300 font-mono mt-0.5"><span id="pcs-count-1">0</span> owned</p>
+                        </div>
+                        <button 
+                            id="buy-pcs-increaser-1" 
+                            class="buy-button px-4 py-2 bg-amber-500 hover:bg-amber-400 rounded-lg font-bold text-blue-900 transition duration-150 shadow-lg disabled:opacity-50"
+                            data-tier="1"
+                        >
+                            <span id="pcs-increaser-cost-1">50 Pibbcoins</span>
+                        </button>
+                    </div>
 
-    let snake, food, dx, dy, gameOver, interval, gameStarted, score;
+                    <div id="pcs-increaser-item-2" class="flex justify-between items-center bg-blue-700 p-3 rounded-lg shadow-md">
+                        <div>
+                            <p class="text-xl font-bold">Pibble Washer II (10x)</p>
+                            <p class="text-sm text-fuchsia-300 font-mono mt-0.5"><span id="pcs-count-2">0</span> owned</p>
+                        </div>
+                        <button 
+                            id="buy-pcs-increaser-2" 
+                            class="buy-button px-4 py-2 bg-amber-500 hover:bg-amber-400 rounded-lg font-bold text-blue-900 transition duration-150 shadow-lg disabled:opacity-50"
+                            data-tier="2"
+                        >
+                            <span id="pcs-increaser-cost-2">500 Pibbcoins</span>
+                        </button>
+                    </div>
 
-    function initGame() {
-      snake = [{ x: 10, y: 10 }];
-      food = { x: 15, y: 15 };
-      dx = 0;
-      dy = 0;
-      score = 0;
-      updateScore();
-      gameOver = false;
-      gameStarted = false;
-      drawGame();
-    }
+                    <div id="pcs-increaser-item-3" class="flex justify-between items-center bg-blue-700 p-3 rounded-lg shadow-md">
+                        <div>
+                            <p class="text-xl font-bold">Pibble Washer III (100x)</p>
+                            <p class="text-sm text-fuchsia-300 font-mono mt-0.5"><span id="pcs-count-3">0</span> owned</p>
+                        </div>
+                        <button 
+                            id="buy-pcs-increaser-3" 
+                            class="buy-button px-4 py-2 bg-amber-500 hover:bg-amber-400 rounded-lg font-bold text-blue-900 transition duration-150 shadow-lg disabled:opacity-50"
+                            data-tier="3"
+                        >
+                            <span id="pcs-increaser-cost-3">5,000 Pibbcoins</span>
+                        </button>
+                    </div>
 
-    function updateScore() {
-      scoreDisplay.textContent = score;
-    }
+                </div>
+                <div id="upgrades-content" class="hidden">
+                    <p class="text-gray-300 text-center text-lg">Upgrades: No items currently available.</p>
+                    <p class="text-gray-400 text-center text-sm mt-2">These will be passive bonuses like money per second.</p>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center">
+                <button id="back-to-clicker" class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-lg font-bold transition duration-150 shadow-lg">Back to Game</button>
+            </div>
+        </div>
+    </main>
 
-    document.addEventListener("keydown", (e) => {
-      if (gameOver) return;
+    <script>
+        const DEFAULT_IMAGE_SRC = "https://raw.githubusercontent.com/ILoveGothsAndChicken/A-School/main/Perfect.png";
+        const CLICK_DOWN_IMAGE_SRC = "https://github.com/ILoveGothsAndChicken/A-School/raw/main/Sponge%20Pibble.png";
+        
+        const moneyDisplay = document.getElementById('money-display');
+        const pcsDisplay = document.getElementById('pcs-display'); 
+        const clickerSquare = document.getElementById('clicker-square');
+        const clickerView = document.getElementById('clicker-view');
+        const purchasesView = document.getElementById('purchases-view');
+        const purchasesButton = document.getElementById('purchases-button');
+        const backToClickerButton = document.getElementById('back-to-clicker');
+        
+        const storeTabButton = document.getElementById('tab-store');
+        const upgradesTabButton = document.getElementById('tab-upgrades');
+        const purchasesTitle = document.getElementById('purchases-title');
+        
+        const storeContent = document.getElementById('store-content');
+        const upgradesContent = document.getElementById('upgrades-content');
 
-      let key = e.key.toLowerCase();
-      if (!gameStarted && ["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"].includes(key)) {
-        gameStarted = true;
-      }
+        const pcsIncreaserCostSpan1 = document.getElementById('pcs-increaser-cost-1');
+        const pcsCountSpan1 = document.getElementById('pcs-count-1');
 
-      switch (key) {
-        case "arrowup":
-        case "w":
-          if (dy === 0) { dx = 0; dy = -1; }
-          break;
-        case "arrowdown":
-        case "s":
-          if (dy === 0) { dx = 0; dy = 1; }
-          break;
-        case "arrowleft":
-        case "a":
-          if (dx === 0) { dx = -1; dy = 0; }
-          break;
-        case "arrowright":
-        case "d":
-          if (dx === 0) { dx = 1; dy = 0; }
-          break;
-      }
-    });
+        const pcsIncreaserCostSpan2 = document.getElementById('pcs-increaser-cost-2');
+        const pcsCountSpan2 = document.getElementById('pcs-count-2');
+        
+        const pcsIncreaserCostSpan3 = document.getElementById('pcs-increaser-cost-3');
+        const pcsCountSpan3 = document.getElementById('pcs-count-3');
 
-    function startGame() {
-      initGame();
-      clearInterval(interval);
-      const speed = parseInt(difficultySelect.value);
-      interval = setInterval(gameLoop, speed);
-    }
+        const buyButtons = document.querySelectorAll('.buy-button');
+        
+        let money = 0;
+        let pcs = 0.0;
+        let currentTab = 'store';
 
-    function gameLoop() {
-      if (gameOver || !gameStarted) return;
+        let pcsIncreaserCount1 = 0; 
+        let pcsIncreaserCost1 = 50;
+        const COST_MULTIPLIER_1 = 1.1;
+        const BASE_REWARD_1 = 0.2;
+        const INCREMENT_REWARD_1 = 1.2;
 
-      const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+        let pcsIncreaserCount2 = 0; 
+        let pcsIncreaserCost2 = 500;
+        const COST_MULTIPLIER_2 = 1.15;
+        const REWARD_MULTIPLIER_2 = 10;
 
-      if (
-        head.x < 0 || head.x >= tileCount ||
-        head.y < 0 || head.y >= tileCount ||
-        snake.some(segment => segment.x === head.x && segment.y === head.y)
-      ) {
-        gameOver = true;
-        clearInterval(interval);
-        alert("Game Over! Final Score: " + score);
-        return;
-      }
+        let pcsIncreaserCount3 = 0; 
+        let pcsIncreaserCost3 = 5000;
+        const COST_MULTIPLIER_3 = 1.2;
+        const REWARD_MULTIPLIER_3 = 100;
 
-      snake.unshift(head);
 
-      if (head.x === food.x && head.y === food.y) {
-        score++;
-        updateScore();
-        food = {
-          x: Math.floor(Math.random() * tileCount),
-          y: Math.floor(Math.random() * tileCount)
-        };
-      } else {
-        snake.pop();
-      }
+        function gameLoop() {
+            money += pcs;
+            updateDisplay(); 
+        }
 
-      drawGame();
-    }
+        function startGameLoop() {
+            setInterval(gameLoop, 1000);
+        }
 
-    function drawGame() {
-      ctx.fillStyle = "#111";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+        function calculateNextPcsReward(tier) {
+            let count, multiplier;
 
-      ctx.fillStyle = "#f00";
-      ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
+            if (tier === 1) {
+                count = pcsIncreaserCount1;
+                multiplier = 1;
+            } else if (tier === 2) {
+                count = pcsIncreaserCount2;
+                multiplier = REWARD_MULTIPLIER_2;
+            } else if (tier === 3) {
+                count = pcsIncreaserCount3;
+                multiplier = REWARD_MULTIPLIER_3;
+            } else {
+                return 0;
+            }
 
-      ctx.fillStyle = "#0f0";
-      for (let segment of snake) {
-        ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
-      }
-    }
-    initGame();
-  </script>
+            const baseReward = BASE_REWARD_1 + (count * INCREMENT_REWARD_1);
+            return baseReward * multiplier;
+        }
+
+        function updateDisplay() {
+            moneyDisplay.textContent = money.toFixed(1); 
+            
+            pcsDisplay.textContent = pcs.toFixed(1); 
+            checkButtonStates();
+
+            pcsCountSpan1.textContent = pcsIncreaserCount1;
+            pcsCountSpan2.textContent = pcsIncreaserCount2;
+            pcsCountSpan3.textContent = pcsIncreaserCount3;
+        }
+
+        function handleSquareClick() {
+            money += 1;
+            updateDisplay();
+        }
+
+        
+        function checkButtonStates() {
+            document.getElementById('buy-pcs-increaser-1').disabled = money < pcsIncreaserCost1;
+            pcsIncreaserCostSpan1.textContent = `${Math.ceil(pcsIncreaserCost1)} Pibbcoins`;
+            
+            document.getElementById('buy-pcs-increaser-2').disabled = money < pcsIncreaserCost2;
+            pcsIncreaserCostSpan2.textContent = `${Math.ceil(pcsIncreaserCost2)} Pibbcoins`;
+            
+            document.getElementById('buy-pcs-increaser-3').disabled = money < pcsIncreaserCost3;
+            pcsIncreaserCostSpan3.textContent = `${Math.ceil(pcsIncreaserCost3)} Pibbcoins`;
+        }
+
+        function buyPibbleWasher(tier) {
+            let currentCost, currentCount, costMultiplier;
+
+            if (tier === 1) {
+                currentCost = pcsIncreaserCost1;
+                currentCount = pcsIncreaserCount1;
+                costMultiplier = COST_MULTIPLIER_1;
+            } else if (tier === 2) {
+                currentCost = pcsIncreaserCost2;
+                currentCount = pcsIncreaserCount2;
+                costMultiplier = COST_MULTIPLIER_2;
+            } else if (tier === 3) {
+                currentCost = pcsIncreaserCost3;
+                currentCount = pcsIncreaserCount3;
+                costMultiplier = COST_MULTIPLIER_3;
+            } else {
+                console.error("Invalid Pibble Washer Tier:", tier);
+                return;
+            }
+
+            if (money >= currentCost) {
+                money -= currentCost;
+                
+                const reward = calculateNextPcsReward(tier);
+                pcs += reward;
+                
+                if (tier === 1) {
+                    pcsIncreaserCount1++;
+                    pcsIncreaserCost1 *= costMultiplier;
+                } else if (tier === 2) {
+                    pcsIncreaserCount2++;
+                    pcsIncreaserCost2 *= costMultiplier;
+                } else if (tier === 3) {
+                    pcsIncreaserCount3++;
+                    pcsIncreaserCost3 *= costMultiplier;
+                }
+
+                updateDisplay();
+            } else {
+                console.log(`Not enough Pibbcoins to buy Tier ${tier} Washer!`);
+            }
+        }
+
+        function switchView(viewName) {
+            if (viewName === 'purchases') {
+                clickerView.classList.add('hidden');
+                purchasesView.classList.remove('hidden');
+                purchasesButton.disabled = true;
+                purchasesButton.classList.add('opacity-50', 'cursor-default');
+                checkButtonStates(); 
+            } else { 
+                clickerView.classList.remove('hidden');
+                purchasesView.classList.add('hidden');
+                purchasesButton.disabled = false;
+                purchasesButton.classList.remove('opacity-50', 'cursor-default');
+            }
+        }
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            purchasesTitle.textContent = tabName === 'store' ? 'Store' : 'Upgrades';
+            storeTabButton.classList.remove('tab-active', 'bg-blue-700');
+            upgradesTabButton.classList.remove('tab-active', 'bg-blue-700');
+            if (tabName === 'store') {
+                storeTabButton.classList.add('tab-active');
+                upgradesTabButton.classList.add('bg-blue-700');
+                storeContent.classList.remove('hidden');
+                upgradesContent.classList.add('hidden');
+            } else {
+                upgradesTabButton.classList.add('tab-active');
+                storeTabButton.classList.add('bg-blue-700');
+                storeContent.classList.add('hidden');
+                upgradesContent.classList.remove('hidden');
+            }
+        }
+
+        function handleMouseDown() {
+            clickerSquare.src = CLICK_DOWN_IMAGE_SRC;
+            clickerSquare.classList.add('clicked');
+        }
+
+        function handleMouseUp() {
+            clickerSquare.src = DEFAULT_IMAGE_SRC;
+            clickerSquare.classList.remove('clicked');
+        }
+
+
+        clickerSquare.addEventListener('mousedown', handleMouseDown);
+        clickerSquare.addEventListener('mouseup', handleMouseUp);
+        clickerSquare.addEventListener('mouseleave', handleMouseUp);
+        clickerSquare.addEventListener('click', handleSquareClick);
+
+
+        purchasesButton.addEventListener('click', () => switchView('purchases'));
+        backToClickerButton.addEventListener('click', () => switchView('clicker'));
+
+        storeTabButton.addEventListener('click', () => switchTab('store'));
+        upgradesTabButton.addEventListener('click', () => switchTab('upgrades'));
+
+        buyButtons.forEach(button => {
+            button.addEventListener('click', (event) => {
+                const tier = parseInt(event.currentTarget.dataset.tier);
+                buyPibbleWasher(tier);
+            });
+        });
+
+
+        updateDisplay();
+        switchTab('store');
+        startGameLoop(); 
+    </script>
+
 </body>
 </html>
