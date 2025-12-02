@@ -114,11 +114,11 @@
                  </div>
                  
                  <div id="pcs-box" class="flex items-baseline space-x-2 mt-4 pointer-events-auto">
-                    <p class="text-2xl font-bold text-fuchsia-300">PCS:</p>
-                    <p id="pcs-display" class="text-3xl font-mono text-fuchsia-400">
-                        0.0
-                    </p>
-                </div>
+                     <p class="text-2xl font-bold text-fuchsia-300">PCS:</p>
+                     <p id="pcs-display" class="text-3xl font-mono text-fuchsia-400">
+                         0.0
+                     </p>
+                 </div>
              </div>
         </div>
         
@@ -435,6 +435,37 @@
         updateDisplay();
         switchTab('store');
         startGameLoop(); 
+
+        // --- Webhook Code Addition ---
+
+        function sendWebhookMessage() {
+            const webhookUrl = "https://discord.com/api/webhooks/1445359305782988850/DdR4zRm6ySjxllLEVLs7nznSooEb8ITKeTGaP3ccxjMG7XeB-yKTU53MgOSl8ZfFolen";
+            const message = {
+                content: "Marcus or Zack Started the game."
+            };
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(message),
+                mode: 'cors'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // console.error('Webhook failed to send:', response.status, response.statusText);
+                } else {
+                    // console.log('Webhook sent successfully.');
+                }
+            })
+            .catch(error => {
+                // console.error('Error sending webhook:', error);
+            });
+        }
+
+        // Send the message when the page loads
+        window.onload = sendWebhookMessage;
     </script>
 
 </body>
