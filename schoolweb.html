@@ -94,7 +94,7 @@
         <div id="money-box" class="flex flex-col items-start space-y-0.5">
             <p class="text-xl font-medium text-blue-300">PibbCoins:</p>
             <p id="money-display" class="text-5xl font-mono text-lime-400">
-                0.0
+                0
             </p>
         </div>
 
@@ -114,12 +114,12 @@
                  </div>
                  
                  <div id="pcs-box" class="flex items-baseline space-x-2 mt-4 pointer-events-auto">
-                     <p class="text-2xl font-bold text-fuchsia-300">PCS:</p>
-                     <p id="pcs-display" class="text-3xl font-mono text-fuchsia-400">
-                         0.0
-                     </p>
-                 </div>
-             </div>
+                    <p class="text-2xl font-bold text-fuchsia-300">PCS:</p>
+                    <p id="pcs-display" class="text-3xl font-mono text-fuchsia-400">
+                        0.0
+                    </p>
+                </div>
+            </div>
         </div>
         
         <button id="purchases-button" class="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded-lg font-semibold text-sm transition duration-150 shadow-lg border border-blue-500 mt-2">
@@ -247,29 +247,31 @@
 
         const buyButtons = document.querySelectorAll('.buy-button');
         
-        let money = 0;
+        // Changed to use Math.floor() in gameLoop, so we can initialize as a whole number
+        let money = 0; 
         let pcs = 0.0;
         let currentTab = 'store';
 
         let pcsIncreaserCount1 = 0; 
         let pcsIncreaserCost1 = 50;
         const COST_MULTIPLIER_1 = 1.1;
-        const BASE_REWARD_1 = 0.2;
-        const INCREMENT_REWARD_1 = 1.2;
+        const REWARD_ADD_1 = 1;
 
         let pcsIncreaserCount2 = 0; 
         let pcsIncreaserCost2 = 500;
         const COST_MULTIPLIER_2 = 1.15;
-        const REWARD_MULTIPLIER_2 = 10;
+        const REWARD_ADD_2 = 10;
 
         let pcsIncreaserCount3 = 0; 
         let pcsIncreaserCost3 = 5000;
         const COST_MULTIPLIER_3 = 1.2;
-        const REWARD_MULTIPLIER_3 = 100;
+        const REWARD_ADD_3 = 100;
 
 
         function gameLoop() {
-            money += pcs;
+            // Key Change 1: Use Math.floor() to ensure only whole Pibbcoins are added per tick
+            // This prevents the 'money' variable from accumulating decimal dust
+            money += Math.floor(pcs);
             updateDisplay(); 
         }
 
@@ -277,29 +279,32 @@
             setInterval(gameLoop, 1000);
         }
 
-        function calculateNextPcsReward(tier) {
-            let count, multiplier;
-
+        function calculateReward(tier) {
+            let count;
+            
             if (tier === 1) {
                 count = pcsIncreaserCount1;
-                multiplier = 1;
+                return count * REWARD_ADD_1; 
             } else if (tier === 2) {
                 count = pcsIncreaserCount2;
-                multiplier = REWARD_MULTIPLIER_2;
+                return count * REWARD_ADD_2;
             } else if (tier === 3) {
                 count = pcsIncreaserCount3;
-                multiplier = REWARD_MULTIPLIER_3;
+                return count * REWARD_ADD_3;
             } else {
                 return 0;
             }
+        }
 
-            const baseReward = BASE_REWARD_1 + (count * INCREMENT_REWARD_1);
-            return baseReward * multiplier;
+        function recalculateTotalPcs() {
+            pcs = calculateReward(1) + calculateReward(2) + calculateReward(3);
         }
 
         function updateDisplay() {
-            moneyDisplay.textContent = money.toFixed(1); 
+            // Key Change 2: Display money without decimals
+            moneyDisplay.textContent = money; 
             
+            // PCS (Pibbcoins per second) still shows decimals for user context
             pcsDisplay.textContent = pcs.toFixed(1); 
             checkButtonStates();
 
@@ -309,12 +314,14 @@
         }
 
         function handleSquareClick() {
+            // Manual click adds a whole number
             money += 1;
             updateDisplay();
         }
 
         
         function checkButtonStates() {
+            // Costs remain rounded up for purchase display
             document.getElementById('buy-pcs-increaser-1').disabled = money < pcsIncreaserCost1;
             pcsIncreaserCostSpan1.textContent = `${Math.ceil(pcsIncreaserCost1)} Pibbcoins`;
             
@@ -326,30 +333,26 @@
         }
 
         function buyPibbleWasher(tier) {
-            let currentCost, currentCount, costMultiplier;
+            let currentCost, costMultiplier;
 
             if (tier === 1) {
                 currentCost = pcsIncreaserCost1;
-                currentCount = pcsIncreaserCount1;
                 costMultiplier = COST_MULTIPLIER_1;
             } else if (tier === 2) {
                 currentCost = pcsIncreaserCost2;
-                currentCount = pcsIncreaserCount2;
                 costMultiplier = COST_MULTIPLIER_2;
             } else if (tier === 3) {
                 currentCost = pcsIncreaserCost3;
-                currentCount = pcsIncreaserCount3;
                 costMultiplier = COST_MULTIPLIER_3;
             } else {
                 console.error("Invalid Pibble Washer Tier:", tier);
                 return;
             }
 
-            if (money >= currentCost) {
-                money -= currentCost;
-                
-                const reward = calculateNextPcsReward(tier);
-                pcs += reward;
+            // Money check uses the current whole number money value against the ceiling of the cost
+            if (money >= Math.ceil(currentCost)) {
+                // Subtract cost as a whole number from the money variable
+                money -= Math.ceil(currentCost);
                 
                 if (tier === 1) {
                     pcsIncreaserCount1++;
@@ -361,6 +364,8 @@
                     pcsIncreaserCount3++;
                     pcsIncreaserCost3 *= costMultiplier;
                 }
+
+                recalculateTotalPcs();
 
                 updateDisplay();
             } else {
@@ -432,40 +437,10 @@
         });
 
 
+        recalculateTotalPcs();
         updateDisplay();
         switchTab('store');
         startGameLoop(); 
-
-        // --- Webhook Code Addition ---
-
-        function sendWebhookMessage() {
-            const webhookUrl = "https://discord.com/api/webhooks/1445359305782988850/DdR4zRm6ySjxllLEVLs7nznSooEb8ITKeTGaP3ccxjMG7XeB-yKTU53MgOSl8ZfFolen";
-            const message = {
-                content: "Marcus or Zack Started the game."
-            };
-
-            fetch(webhookUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(message),
-                mode: 'cors'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    // console.error('Webhook failed to send:', response.status, response.statusText);
-                } else {
-                    // console.log('Webhook sent successfully.');
-                }
-            })
-            .catch(error => {
-                // console.error('Error sending webhook:', error);
-            });
-        }
-
-        // Send the message when the page loads
-        window.onload = sendWebhookMessage;
     </script>
 
 </body>
