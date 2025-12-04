@@ -383,8 +383,8 @@
                 cost: 15000,
                 purchased: false,
                 effect: () => pcsMultiplier *= 2,
-                name: "Permanent 2x PCS Multiplier",
-                desc: "Permanently doubles income from Pibble Washers (PCS).",
+                name: "Super Soap 🧼",
+                desc: "Permanent Double PCS",
                 id: "buy-perm-2x-rewords"
             },
             autoClickMaster: {
@@ -399,9 +399,9 @@
                 cost: 750000,
                 purchased: false,
                 effect: () => boostDurationSeconds = 60,
-                name: "Super Boost Extender",
-                desc: "Increases 3X Golden Sponge Boost duration to 60 seconds.",
-                id: "buy-super-boost-extender"
+                name: "ULTIMATE WASH MY BELLY MODE!",
+                desc: "Increases 3x Golden Sponge Duration",
+                id: "buy-boost-extender"
             }
         };
 
@@ -433,15 +433,16 @@
         function handleAutoPurchase() {
             if (!isAutoPurchaseEnabled) return;
             
-            const currentStepInCycle = autoPurchaseStep % 7; 
+            const cycleLength = 8;
+            const currentStepInCycle = autoPurchaseStep % cycleLength; 
             let tierToBuy = -1;
 
-            if (currentStepInCycle < 3) {
-                tierToBuy = 1; 
-            } else if (currentStepInCycle < 6) {
-                tierToBuy = 2; 
+            if (currentStepInCycle < 5) {
+                tierToBuy = 1;
+            } else if (currentStepInCycle < 7) {
+                tierToBuy = 2;
             } else {
-                tierToBuy = 3; 
+                tierToBuy = 3;
             }
             
             const cost = getCost(tierToBuy);
@@ -735,16 +736,16 @@
                 pcsIncreaserCost2: pcsIncreaserCost2,
                 pcsIncreaserCount3: pcsIncreaserCount3,
                 pcsIncreaserCost3: pcsIncreaserCost3,
-                permUpgrades: permanentUpgradesState, 
+                permUpgrades: permanentUpgradesState,
                 isAutoPurchaseEnabled: isAutoPurchaseEnabled,
-                autoPurchaseStep: autoPurchaseStep,
             };
+
             localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
             
             saveStatus.textContent = 'Game Saved!';
-            saveStatus.classList.add('opacity-100');
+            saveStatus.classList.remove('opacity-0');
             setTimeout(() => {
-                saveStatus.classList.remove('opacity-100');
+                saveStatus.classList.add('opacity-0');
             }, 2000);
         }
 
@@ -759,220 +760,153 @@
                 pcsIncreaserCost2 = gameState.pcsIncreaserCost2 || INITIAL_COST_2;
                 pcsIncreaserCount3 = gameState.pcsIncreaserCount3 || 0;
                 pcsIncreaserCost3 = gameState.pcsIncreaserCost3 || INITIAL_COST_3;
-                
-                const savedPermUpgrades = gameState.permUpgrades || {};
-                for (const key in PERM_UPGRADES) {
-                    if (savedPermUpgrades.hasOwnProperty(key)) {
-                        PERM_UPGRADES[key].purchased = savedPermUpgrades[key];
-                    }
-                }
-                
                 isAutoPurchaseEnabled = gameState.isAutoPurchaseEnabled === true;
-                autoPurchaseStep = gameState.autoPurchaseStep || 0;
-            }
-        }
-        
-        function showConfirmation(text, callback) {
-            confirmationText.textContent = text;
-            confirmationModal.classList.remove('hidden');
-            
-            const handleConfirm = () => {
-                confirmationModal.classList.add('hidden');
-                callback(true);
-                cleanupListeners();
-            };
-            
-            const handleCancel = () => {
-                confirmationModal.classList.add('hidden');
-                callback(false);
-                cleanupListeners();
-            };
-            
-            const cleanupListeners = () => {
-                confirmActionButton.removeEventListener('click', handleConfirm);
-                cancelActionButton.removeEventListener('click', handleCancel);
-                confirmationModal.removeEventListener('click', handleCancel);
-            };
 
-            confirmActionButton.addEventListener('click', handleConfirm);
-            cancelActionButton.addEventListener('click', handleCancel);
-            confirmationModal.addEventListener('click', (e) => {
-                if (e.target === confirmationModal) {
-                    handleCancel();
-                }
-            });
-        }
-
-        function restartGame() {
-            showConfirmation("Are you sure you want to restart? All progress will be lost.", (confirmed) => {
-                if (confirmed) {
-                    localStorage.removeItem(STORAGE_KEY);
-                    money = 0;
-                    pcsIncreaserCount1 = 0;
-                    pcsIncreaserCost1 = INITIAL_COST_1;
-                    pcsIncreaserCount2 = 0;
-                    pcsIncreaserCost2 = INITIAL_COST_2;
-                    pcsIncreaserCount3 = 0;
-                    pcsIncreaserCost3 = INITIAL_COST_3;
-                    boostMultiplier = 1;
-                    
-                    for (const key in PERM_UPGRADES) {
-                        PERM_UPGRADES[key].purchased = false;
+                if (gameState.permUpgrades) {
+                    for (const key in gameState.permUpgrades) {
+                        if (PERM_UPGRADES[key]) {
+                            PERM_UPGRADES[key].purchased = gameState.permUpgrades[key];
+                        }
                     }
-                    
-                    isAutoPurchaseEnabled = false;
-                    autoPurchaseStep = 0;
-                    
-                    clearInterval(gameLoopInterval);
-                    clearTimeout(boostTimeout);
-                    clearInterval(boostInterval);
-                    clearTimeout(spongeTimeout);
-                    clearInterval(spongeInterval);
-                    stopAutoPurchaseLoop();
-                    removeGoldenSponge();
-                    
-                    boostTimer.classList.add('hidden');
-                    
-                    init();
-                    
-                    settingsModal.classList.add('hidden');
-                    
-                    saveStatus.textContent = "Game has been restarted!";
-                    saveStatus.classList.add('opacity-100');
-                    setTimeout(() => {
-                        saveStatus.classList.remove('opacity-100');
-                    }, 2000);
                 }
-            });
-        }
-        
-        function toggleAutoPurchase() {
-            isAutoPurchaseEnabled = !isAutoPurchaseEnabled;
+            } else {
+                money = 0;
+                pcsIncreaserCount1 = 0;
+                pcsIncreaserCost1 = INITIAL_COST_1;
+                pcsIncreaserCount2 = 0;
+                pcsIncreaserCost2 = INITIAL_COST_2;
+                pcsIncreaserCount3 = 0;
+                pcsIncreaserCost3 = INITIAL_COST_3;
+                isAutoPurchaseEnabled = false;
+                for (const key in PERM_UPGRADES) {
+                    PERM_UPGRADES[key].purchased = false;
+                }
+            }
             
-            if (isAutoPurchaseEnabled) {
-                toggleAutoPurchaseButton.textContent = 'ON';
-                toggleAutoPurchaseButton.classList.remove('bg-red-600', 'hover:bg-red-500');
-                toggleAutoPurchaseButton.classList.add('bg-lime-500', 'hover:bg-lime-400');
-                startAutoPurchaseLoop();
-            } else {
-                toggleAutoPurchaseButton.textContent = 'OFF';
-                toggleAutoPurchaseButton.classList.remove('bg-lime-500', 'hover:bg-lime-400');
-                toggleAutoPurchaseButton.classList.add('bg-red-600', 'hover:bg-red-500');
-                stopAutoPurchaseLoop();
-            }
-        }
-        
-        function updateAutoPurchaseButtonState() {
-            if (isAutoPurchaseEnabled) {
-                toggleAutoPurchaseButton.textContent = 'ON';
-                toggleAutoPurchaseButton.classList.remove('bg-red-600', 'hover:bg-red-500');
-                toggleAutoPurchaseButton.classList.add('bg-lime-500', 'hover:bg-lime-400');
-                startAutoPurchaseLoop();
-            } else {
-                toggleAutoPurchaseButton.textContent = 'OFF';
-                toggleAutoPurchaseButton.classList.remove('bg-lime-500', 'hover:bg-lime-400');
-                toggleAutoPurchaseButton.classList.add('bg-red-600', 'hover:bg-red-500');
-                stopAutoPurchaseLoop();
-            }
+            applyAllPermanentEffects();
+            recalculateTotalPcs(); 
+            updateAutoPurchaseButton();
+            updateDisplay(); 
         }
 
-        function generatePermanentUpgradesHTML() {
-            let html = '';
+        function resetGame() {
+            localStorage.removeItem(STORAGE_KEY);
+            loadGame(); 
+            if (autoPurchaseInterval) {
+                stopAutoPurchaseLoop();
+            }
+            scheduleNextSpawn();
+            settingsModal.classList.add('hidden');
+            confirmationModal.classList.add('hidden');
+        }
+
+        function updateAutoPurchaseButton() {
+            if (isAutoPurchaseEnabled) {
+                toggleAutoPurchaseButton.textContent = 'ON';
+                toggleAutoPurchaseButton.classList.remove('bg-gray-500', 'hover:bg-gray-400');
+                toggleAutoPurchaseButton.classList.add('bg-lime-500', 'hover:bg-lime-400', 'text-blue-900');
+                startAutoPurchaseLoop();
+            } else {
+                toggleAutoPurchaseButton.textContent = 'OFF';
+                toggleAutoPurchaseButton.classList.remove('bg-lime-500', 'hover:bg-lime-400', 'text-blue-900');
+                toggleAutoPurchaseButton.classList.add('bg-gray-500', 'hover:bg-gray-400');
+                stopAutoPurchaseLoop();
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGame();
+            startGameLoop();
+            scheduleNextSpawn();
+            
+            const storeContainer = document.getElementById('store-content-container');
             for (const key in PERM_UPGRADES) {
                 const upgrade = PERM_UPGRADES[key];
-                html += `
-                    <div id="${upgrade.id}-item" class="flex flex-col sm:flex-row justify-between items-center bg-blue-800/80 p-4 rounded-lg shadow-xl hover:bg-blue-700/80 transition duration-200 border-2 border-yellow-400">
-                        <div class="mb-2 sm:mb-0 text-center sm:text-left">
-                            <p class="text-xl font-bold text-yellow-300">${upgrade.name}</p>
-                            <p class="text-sm text-gray-300 font-mono mt-0.5">${upgrade.desc}</p>
-                        </div>
-                        <button 
-                            id="${upgrade.id}" 
-                            class="one-time-button w-full sm:w-auto px-6 py-2 bg-amber-500 hover:bg-amber-400 rounded-xl font-bold text-blue-900 transition duration-150 shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
-                            data-upgrade-key="${key}"
-                        >
-                            <span>${formatCost(upgrade.cost)} Pibbcoins</span>
-                        </button>
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'flex flex-col sm:flex-row justify-between items-center bg-blue-700/70 p-4 rounded-lg shadow-inner shadow-blue-900/50 hover:bg-blue-600/70 transition duration-200';
+                itemDiv.innerHTML = `
+                    <div class="mb-2 sm:mb-0 text-center sm:text-left">
+                        <p class="text-xl font-bold">${upgrade.name}</p>
+                        <p class="text-sm text-fuchsia-300 font-mono mt-0.5">${upgrade.desc}</p>
                     </div>
+                    <button 
+                        id="${upgrade.id}" 
+                        class="buy-perm-button w-full sm:w-auto px-6 py-2 bg-amber-500 hover:bg-amber-400 rounded-xl font-bold text-blue-900 transition duration-150 shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+                        data-upgrade-key="${key}"
+                    >
+                        <span>${formatCost(upgrade.cost)} Pibbcoins</span>
+                    </button>
                 `;
+                storeContainer.appendChild(itemDiv);
             }
             
-            const comingSoonDiv = document.querySelector('#store-content-container > .bg-blue-900\\/60');
-            if (comingSoonDiv) {
-                const permUpgradesContainer = document.createElement('div');
-                permUpgradesContainer.id = 'permanent-upgrades-container';
-                permUpgradesContainer.className = 'space-y-4 pt-4 mt-4 border-t border-blue-600';
-                permUpgradesContainer.innerHTML = `<h3 class="text-2xl font-bold text-yellow-400 mb-4 text-center">Permanent Upgrades</h3>${html}`;
-                
-                comingSoonDiv.parentNode.insertBefore(permUpgradesContainer, comingSoonDiv);
-                
-                comingSoonDiv.classList.add('hidden'); 
-            }
-        }
-        
-        function init() {
-            loadGame(); 
-            applyAllPermanentEffects(); 
-            
-            if (!document.getElementById('permanent-upgrades-container')) {
-                generatePermanentUpgradesHTML();
-            }
-            
-            if (!clickerSquare.dataset.listenersAdded) {
-                clickerSquare.addEventListener('mousedown', handleMouseDown);
-                clickerSquare.addEventListener('mouseup', handleMouseUp);
-                clickerSquare.addEventListener('mouseleave', handleMouseUp);
-                clickerSquare.addEventListener('click', handleMainClick);
-                clickerSquare.dataset.listenersAdded = 'true';
-
-                buyButtons.forEach(button => {
-                    button.addEventListener('click', (event) => {
-                        const tier = parseInt(event.currentTarget.dataset.tier);
-                        buyPibbleWasher(tier);
-                    });
+            document.querySelectorAll('.buy-perm-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    buyPermanentUpgrade(button.dataset.upgradeKey);
                 });
-                
-                document.querySelectorAll('.one-time-button').forEach(button => {
-                    button.addEventListener('click', (event) => {
-                        const key = event.currentTarget.dataset.upgradeKey;
-                        buyPermanentUpgrade(key);
-                    });
-                });
-                
-                settingsButton.addEventListener('click', () => settingsModal.classList.remove('hidden'));
-                closeSettingsButton.addEventListener('click', () => settingsModal.classList.add('hidden'));
-                saveButton.addEventListener('click', saveGame);
-                restartButton.addEventListener('click', restartGame);
-                toggleAutoPurchaseButton.addEventListener('click', toggleAutoPurchase);
-
-                settingsModal.addEventListener('click', (e) => {
-                    if (e.target === settingsModal) {
-                        settingsModal.classList.add('hidden');
-                    }
-                });
-            }
-
-            updateAutoPurchaseButtonState();
+            });
             
-            recalculateTotalPcs();
-            updateDisplay();
+            checkButtonStates();
+        });
 
-            startGameLoop(); 
-            scheduleNextSpawn();
-        }
 
-        function handleMouseDown() {
-            clickerSquare.src = CLICK_DOWN_IMAGE_SRC;
+        clickerSquare.addEventListener('mousedown', () => {
             clickerSquare.classList.add('clicked');
-        }
+            clickerSquare.src = CLICK_DOWN_IMAGE_SRC;
+        });
 
-        function handleMouseUp() {
-            clickerSquare.src = DEFAULT_IMAGE_SRC;
+        clickerSquare.addEventListener('mouseup', () => {
             clickerSquare.classList.remove('clicked');
-        }
+            clickerSquare.src = DEFAULT_IMAGE_SRC;
+            handleMainClick();
+        });
 
-        init();
+        clickerSquare.addEventListener('mouseleave', () => {
+            clickerSquare.classList.remove('clicked');
+            clickerSquare.src = DEFAULT_IMAGE_SRC;
+        });
 
+
+        buyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tier = parseInt(button.dataset.tier);
+                buyPibbleWasher(tier);
+                updateDisplay();
+            });
+        });
+        
+        settingsButton.addEventListener('click', () => {
+            settingsModal.classList.remove('hidden');
+        });
+
+        closeSettingsButton.addEventListener('click', () => {
+            settingsModal.classList.add('hidden');
+        });
+        
+        saveButton.addEventListener('click', saveGame);
+        
+        restartButton.addEventListener('click', () => {
+            confirmationText.textContent = 'Are you sure you want to restart? All progress will be lost.';
+            confirmActionButton.textContent = 'Yes, Restart';
+            confirmActionButton.onclick = resetGame;
+            confirmationModal.classList.remove('hidden');
+        });
+
+        cancelActionButton.addEventListener('click', () => {
+            confirmationModal.classList.add('hidden');
+        });
+        
+        toggleAutoPurchaseButton.addEventListener('click', () => {
+            isAutoPurchaseEnabled = !isAutoPurchaseEnabled;
+            updateAutoPurchaseButton();
+        });
+        
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'F9') {
+                event.preventDefault();
+                window.open('https://fed.education.qld.gov.au/idp/SSO.saml2?SAMLRequest=fVJbT8IwFH73Vyx9X3eBwdIACUKMJCiETR98MaU7gyZdO3pB%2Ffd2QyM%2B6OvX73bO6cTQRrRk7uxR7uDkwNjgvRHSkP5hipyWRFHDDZG0AUMsI8X8YU1SHJNWK6uYEuhK8r%2BCGgPaciVRsFpO0Ws2qigM8jwcZOM8HOZ7CPf1iIUJZGmSs3GcMoaCZ9DGa6bIW3ihMQ5W0lgqrYfiNAuTNIyHZTwmyZgM8xcULP0cXFLbq47WtoZEUQ0VhsqxHsYnUeGDOmPqIl61UVFscNc%2FRcH8u%2BRCSeMa0AXoM2fwtFv%2FmJ0EUC0xnDrLzkSoA5dRZ4GC7ddibrmsuDz8v5P9hWTIfVluw%2B2mKNFs0vmQflI96yK7RF%2Bf%2B7G1Y9ZpwEw1fVw6ia7Zk8tFH33OarlVgrOP4E7phtq%2FayQ46RFehXVPJU6aFhivOVR%2BIUKot4UGamGKfD6gaHYJ%2Ff1zZjef', '_blank'); // Open Google in a new tab
+            }
+        });
     </script>
 </body>
 </html>
