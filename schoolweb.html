@@ -337,25 +337,19 @@
                 <h3 class="text-2xl font-bold text-blue-300 mb-4 pt-4 border-t border-blue-600 text-center">Permanent Upgrades</h3>
                 <div id="perm-upgrades-container" class="space-y-4">
                                 </div>
-
-                <div class="bg-blue-900/60 p-4 rounded-lg shadow-md mt-6">
-                    <p class="text-lg font-bold text-center text-gray-300">Passive Upgrades Coming Soon</p>
-                    <p class="text-sm text-gray-400 text-center">These will boost your click value or PCS multipliers!</p>
-                </div>
-
             </div>
         </div>
         
         <div id="rebirth-section" class="w-full max-w-7xl p-6 rounded-xl shadow-2xl mt-8 mb-8">
             <h2 class="text-3xl font-bold text-red-400 mb-4 text-center border-b pb-2 border-indigo-400">
-                ✨ Rebirth (Permanent Power)
+                ✨ Rebirth
             </h2>
             
             <div id="rebirth-item-1" class="flex flex-col sm:flex-row justify-between items-center bg-indigo-900/50 p-4 rounded-lg shadow-inner shadow-indigo-900/50">
                 <div class="mb-2 sm:mb-0 text-center sm:text-left">
                     <p class="text-xl font-bold text-red-300">First Rebirth: New Dawn</p>
                     <p class="text-sm text-gray-300 font-mono mt-0.5">
-                        Resets PibbCoins and Washers for <span class="font-bold text-red-200">3x PC Multiplier</span>
+                        Reset Your Progress For <span class="font-bold text-red-200">3x PCS</span>
                     </p>
                 </div>
                 <button 
@@ -516,7 +510,7 @@
             purchased: false,
             effect: () => pcsMultiplier *= 1.1,
             name: "Flappy Bird Mastery 🐦",
-            desc: "Permanent 1.1x PCS multiplier (Unlocked after Flappy Bird Score 100+)",
+            desc: "Permanent 1.1x PCS multiplier (Unlocked after Flappy Bird Score 15+)",
             id: "buy-flappy-pcs-multiplier"
         };
 
@@ -721,7 +715,7 @@
                     flappyButton.classList.remove('bg-amber-500', 'hover:bg-amber-400');
                     flappyButton.classList.add('bg-lime-500');
                 } else if (!flappyBirdRewardPurchased) {
-                    flappyButton.querySelector('span').textContent = 'Win Flappy Bird (Score 100+)'
+                    flappyButton.querySelector('span').textContent = 'Win Flappy Bird (Score 15+)'
                 } else {
                     flappyButton.querySelector('span').textContent = 'FREE! (1.1x PCS)'
                 }
@@ -731,40 +725,70 @@
             rebirthCostSpan1.textContent = `${formatCost(rebirthCost)} Pibbcoins`;
         }
 
+        function calculateNextCost(initialCost, count, multiplier) {
+            return initialCost * Math.pow(multiplier, count);
+        }
+
         function buyPibbleWasher(tier) {
-            let cost, countKey, costKey, costMultiplier, rewardAdd;
-            
+            let currentCost;
+            let currentCount;
+            let initialCost;
+            let costMultiplier;
+            let rewardAdd; 
+
             if (tier === 1) {
-                cost = pcsIncreaserCost1;
-                countKey = 'pcsIncreaserCount1';
-                costKey = 'pcsIncreaserCost1';
+                currentCost = pcsIncreaserCost1;
+                currentCount = pcsIncreaserCount1;
+                initialCost = INITIAL_COST_1;
                 costMultiplier = COST_MULTIPLIER_1;
                 rewardAdd = REWARD_ADD_1;
             } else if (tier === 2) {
-                cost = pcsIncreaserCost2;
-                countKey = 'pcsIncreaserCount2';
-                costKey = 'pcsIncreaserCost2';
+                currentCost = pcsIncreaserCost2;
+                currentCount = pcsIncreaserCount2;
+                initialCost = INITIAL_COST_2;
                 costMultiplier = COST_MULTIPLIER_2;
                 rewardAdd = REWARD_ADD_2;
             } else if (tier === 3) {
-                cost = pcsIncreaserCost3;
-                countKey = 'pcsIncreaserCount3';
-                costKey = 'pcsIncreaserCost3';
+                currentCost = pcsIncreaserCost3;
+                currentCount = pcsIncreaserCount3;
+                initialCost = INITIAL_COST_3;
                 costMultiplier = COST_MULTIPLIER_3;
                 rewardAdd = REWARD_ADD_3;
             } else {
                 return;
             }
-            
-            if (money >= cost) {
-                money -= cost;
-                this[countKey]++;
-                this[costKey] *= costMultiplier;
-                
-                recalculateTotalPcs();
-                updateDisplay();
+
+            if (money < currentCost) {
+                return;
             }
+
+            money -= currentCost;
+            currentCount += 1;
+
+            const nextCost = calculateNextCost(initialCost, currentCount, costMultiplier);
+
+            if (tier === 1) {
+                pcsIncreaserCount1 = currentCount;
+                pcsIncreaserCost1 = nextCost;
+            } else if (tier === 2) {
+                pcsIncreaserCount2 = currentCount;
+                pcsIncreaserCost2 = nextCost;
+            } else if (tier === 3) {
+                pcsIncreaserCount3 = currentCount;
+                pcsIncreaserCost3 = nextCost;
+            }
+    
+            recalculateTotalPcs(); 
+
+            updateDisplay();
         }
+
+        buyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tier = parseInt(button.getAttribute('data-tier'));
+                buyPibbleWasher(tier);
+        });
+        });
         
         function buyPermUpgrade(upgradeKey) {
             const upgrade = PERM_UPGRADES[upgradeKey];
@@ -853,7 +877,7 @@
                          data-perm-key="flappyBirdReward"
                          ${upgrade.purchased ? 'disabled' : ''}
                      >
-                         <span>${upgrade.purchased ? 'Purchased' : (flappyBirdRewardPurchased ? 'FREE! (1.1x PCS)' : 'Win Flappy Bird (Score 100+)')}</span>
+                         <span>${upgrade.purchased ? 'Purchased' : (flappyBirdRewardPurchased ? 'FREE! (1.1x PCS)' : 'Win Flappy Bird (Score 15+)')}</span>
                      </button>
                  `;
                  permUpgradesContainer.appendChild(item);
@@ -1177,11 +1201,12 @@
         let score = 0;
         let isFlappyGameOver = true;
         let pipes = [];
-        let pipeGap = 80;
+        let pipeGap = 120;
         let pipeWidth = 20;
         let frameCount = 0;
         let gameSpeed = 2;
-        const PIPE_INTERVAL = 100;
+        const PIPE_INTERVAL = 100
+        let flappyCoin = 0;
 
         function drawBird() {
             ctx.fillStyle = 'yellow';
@@ -1262,10 +1287,11 @@
                 ctx.fillText('Click to Start/Flap', WIDTH / 2, HEIGHT / 2 + 30);
                 ctx.textAlign = 'left';
 
-                if (score >= 100 && !flappyBirdRewardPurchased) {
+                if (score >= 15 && !flappyBirdRewardPurchased) {
                     flappyBirdRewardPurchased = true;
                     saveGame();
                     renderPermUpgrades();
+                    flappyCoin = 1
                 }
             }
         }
