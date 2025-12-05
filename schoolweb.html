@@ -141,6 +141,63 @@
             from { transform: translateY(-50px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+
+        #rebirth-section {
+            background: rgba(49, 46, 129, 0.85);
+            border: 2px solid #6366f1;
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.6);
+        }
+
+        .rebirth-button {
+            background-color: #f87171;
+            color: #4338ca;
+            transition: background-color 0.15s, transform 0.1s;
+        }
+        .rebirth-button:hover:not(:disabled) {
+            background-color: #ef4444;
+            transform: scale(1.03);
+        }
+        .rebirth-button:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+        .rebirth-button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background-color: #f87171;
+        }
+
+        #flappy-game {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 300px;
+            border: 2px solid #1e3a8a;
+            background: #87ceeb;
+            z-index: 50;
+            
+            box-shadow: 0 0 20px rgba(30, 58, 138, 0.7);
+            overflow: hidden;
+        }
+        #flappy-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background-color: #87ceeb;
+        }
+        
+        .flappy-reward-button {
+            background-color: #38a169;
+            color: white;
+            font-weight: bold;
+            transition: background-color 0.15s;
+        }
+        .flappy-reward-button:disabled {
+            background-color: #38a169;
+            opacity: 0.7;
+            cursor: default;
+        }
     </style>
 </head>
 <body class="text-white flex flex-col items-center min-h-screen p-4 z-10 relative">
@@ -148,6 +205,10 @@
     <div id="boost-timer" class="fixed top-4 left-4 p-3 rounded-xl shadow-lg font-extrabold hidden z-50">
         <p class="text-lg">3X BOOST ACTIVE</p>
         <p class="text-3xl font-mono text-center" id="boost-countdown">30.0s</p>
+    </div>
+    
+    <div id="flappy-game" class="hidden">
+        <canvas id="flappy-canvas" width="200" height="300"></canvas>
     </div>
     
     <div class="w-full max-w-7xl flex flex-col items-center z-20">
@@ -176,14 +237,22 @@
                 </div>
                 
                 <div id="pcs-box" class="flex items-baseline space-x-2 mt-4 pointer-events-auto">
-                    <p class="text-2xl font-bold text-fuchsia-300">PPS:</p>
+                    <p class="text-2xl font-bold text-fuchsia-300">PCS:</p>
                     <p id="pcs-display" class="text-3xl font-mono text-fuchsia-400">
-                        0.0
+                        0
                     </p>
                 </div>
+                
             </div>
 
             <div class="absolute right-0 top-6 mr-4 flex flex-col items-end">
+                
+                <button id="flappy-toggle-button" class="p-2 rounded-full bg-green-700 hover:bg-green-600 transition duration-150 z-50 mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-300" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 6a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zm1 3h10a1 1 0 110 2H5a1 1 0 110-2zM4 12a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zm1 3h10a1 1 0 110 2H5a1 1 0 110-2z"/>
+                        <path fill-rule="evenodd" d="M10 18a.5.5 0 01-.5-.5v-4a.5.5 0 011 0v4a.5.5 0 01-.5.5z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
                 <button id="settings-button" class="p-2 rounded-full bg-blue-700 hover:bg-blue-600 transition duration-150 z-50">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-300" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M11.493 3.518c-.856-1.026-2.522-1.026-3.377 0C7.26 4.606 6.51 6.136 5.59 7.37c-.783 1.047-2.31 1.047-3.093 0-.92-.816-1.527-1.847-1.745-3.016.086-1.127.848-1.996 2.012-2.17.653-.13 1.32-.178 2.016-.013 1.037.247 1.83.693 2.51 1.41a3.03 3.03 0 014.288 0c.68-.717 1.473-1.163 2.51-1.41 1.037-.247 1.776.083 2.012 1.178.218 1.169-.485 2.199-1.268 3.016-.92 1.234-1.67 2.764-2.59 3.998-.783 1.047-2.31 1.047-3.093 0-.92-1.234-1.67-2.764-2.59-3.998-.783 1.047-2.31 1.047-3.093 0-1.037 1.383-1.547 2.87-1.765 4.417.086 1.544.848 2.73 2.012 3.125.653.27 1.32.404 2.016.33 1.037-.184 1.83-.55 2.51-1.08a3.03 3.03 0 014.288 0c.68.53 1.473.896 2.51 1.08 1.037.183 1.776-.002 2.012-1.125.218-1.547-.485-3.034-1.268-4.417-1.037-1.67-1.747-3.32-2.34-4.83zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
@@ -217,7 +286,7 @@
                 <div id="line-6" class="wind-line right"></div>
             </div>
         </main>
-
+        
         <div id="store-section" class="w-full p-6 rounded-xl shadow-2xl">
             <h2 class="text-3xl font-bold text-blue-300 mb-6 text-center border-b pb-3 border-blue-600">Store & Upgrades</h2>
             
@@ -264,6 +333,10 @@
                         <span id="pcs-increaser-cost-3">5,000 Pibbcoins</span>
                     </button>
                 </div>
+                
+                <h3 class="text-2xl font-bold text-blue-300 mb-4 pt-4 border-t border-blue-600 text-center">Permanent Upgrades</h3>
+                <div id="perm-upgrades-container" class="space-y-4">
+                                </div>
 
                 <div class="bg-blue-900/60 p-4 rounded-lg shadow-md mt-6">
                     <p class="text-lg font-bold text-center text-gray-300">Passive Upgrades Coming Soon</p>
@@ -271,9 +344,30 @@
                 </div>
 
             </div>
-            
         </div>
         
+        <div id="rebirth-section" class="w-full max-w-7xl p-6 rounded-xl shadow-2xl mt-8 mb-8">
+            <h2 class="text-3xl font-bold text-red-400 mb-4 text-center border-b pb-2 border-indigo-400">
+                ✨ Rebirth (Permanent Power)
+            </h2>
+            
+            <div id="rebirth-item-1" class="flex flex-col sm:flex-row justify-between items-center bg-indigo-900/50 p-4 rounded-lg shadow-inner shadow-indigo-900/50">
+                <div class="mb-2 sm:mb-0 text-center sm:text-left">
+                    <p class="text-xl font-bold text-red-300">First Rebirth: New Dawn</p>
+                    <p class="text-sm text-gray-300 font-mono mt-0.5">
+                        Resets PibbCoins and Washers for <span class="font-bold text-red-200">3x PC Multiplier</span>
+                    </p>
+                </div>
+                <button 
+                    id="buy-rebirth-1" 
+                    class="rebirth-button w-full sm:w-auto px-6 py-3 rounded-xl font-extrabold text-lg transition duration-150 shadow-lg disabled:opacity-40"
+                    data-tier="1"
+                >
+                    <span id="rebirth-cost-1">20.0M Pibbcoins</span>
+                </button>
+            </div>
+            
+        </div>
     </div>
     
     <div id="settings-modal" class="modal fixed inset-0 flex items-center justify-center p-4 z-50 hidden">
@@ -299,6 +393,7 @@
                 <p id="save-status" class="text-center text-sm text-lime-400 mt-2 opacity-0 transition duration-300"></p>
             </div>
         </div>
+        
     </div>
     
     <div id="confirmation-modal" class="modal fixed inset-0 flex items-center justify-center p-4 z-50 hidden">
@@ -323,6 +418,8 @@
         const clickerSquare = document.getElementById('clicker-square');
         const boostTimer = document.getElementById('boost-timer');
         const boostCountdown = document.getElementById('boost-countdown');
+        const flappyGame = document.getElementById('flappy-game'); 
+        const flappyToggleButton = document.getElementById('flappy-toggle-button'); 
 
         const pcsIncreaserCostSpan1 = document.getElementById('pcs-increaser-cost-1');
         const pcsCountSpan1 = document.getElementById('pcs-count-1');
@@ -346,12 +443,18 @@
         const confirmationText = document.getElementById('confirmation-text');
         
         const toggleAutoPurchaseButton = document.getElementById('toggle-auto-purchase');
-
+        
+        const rebirthButton1 = document.getElementById('buy-rebirth-1'); 
+        const rebirthCostSpan1 = document.getElementById('rebirth-cost-1');
+        
+        const permUpgradesContainer = document.getElementById('perm-upgrades-container'); 
 
         let money = 0; 
         let basePcs = 0.0;
-        let pcsMultiplier = 1;
+        let pcsMultiplier = 1; 
         let boostMultiplier = 1;
+        let pcMultiplier = 1; 
+        let rebirthCount = 0; 
         let pcs = 0.0;
         let clickValue = 1; 
         let basePps = 0; 
@@ -378,6 +481,8 @@
         const COST_MULTIPLIER_3 = 1.2;
         const REWARD_ADD_3 = 100;
         
+        let flappyBirdRewardPurchased = false; 
+
         const PERM_UPGRADES = {
             perm2xRewords: {
                 cost: 15000,
@@ -405,6 +510,27 @@
             }
         };
 
+        
+        const FLAPPY_REWARD_UPGRADE = {
+            cost: 0, 
+            purchased: false,
+            effect: () => pcsMultiplier *= 1.1,
+            name: "Flappy Bird Mastery 🐦",
+            desc: "Permanent 1.1x PCS multiplier (Unlocked after Flappy Bird Score 100+)",
+            id: "buy-flappy-pcs-multiplier"
+        };
+
+
+        
+        const REBIRTH_CONFIG = {
+            1: {
+                cost: 20000000, 
+                pcReward: 3, 
+                name: "New Dawn",
+                desc: "Resets all progress (except PC multiplier) for a 3x Permanent Click Multiplier.",
+                id: "rebirth-1"
+            }
+        };
 
         let gameLoopInterval;
         let autoPurchaseInterval;
@@ -412,10 +538,11 @@
         let boostTimeout;
         let spongeTimeout;
         let spongeInterval;
+        
 
         function gameLoop() {
             money += pcs; 
-            money += basePps; 
+            money += basePps * pcMultiplier; 
             updateDisplay(); 
         }
 
@@ -431,30 +558,47 @@
         }
         
         function handleAutoPurchase() {
-            if (!isAutoPurchaseEnabled) return;
-            
-            const cycleLength = 8;
-            const currentStepInCycle = autoPurchaseStep % cycleLength; 
-            let tierToBuy = -1;
+    if (!isAutoPurchaseEnabled) return;
 
-            if (currentStepInCycle < 5) {
-                tierToBuy = 1;
-            } else if (currentStepInCycle < 7) {
-                tierToBuy = 2;
-            } else {
-                tierToBuy = 3;
-            }
-            
-            const cost = getCost(tierToBuy);
-            
-            if (money >= cost) {
-                buyPibbleWasher(tierToBuy);
-                
-                autoPurchaseStep++;
-                
-                updateDisplay();
-            }
-        }
+    
+    const c1 = pcsIncreaserCount1; 
+    const c2 = pcsIncreaserCount2; 
+    const c3 = pcsIncreaserCount3; 
+
+    let tierToBuy = null;
+    
+    
+    const targetC2 = c1 - 10;
+    
+    
+    const targetC3 = c1 - 20; 
+
+    
+    
+    
+    if (c3 < targetC3 && money >= getCost(3)) {
+        tierToBuy = 3;
+    } 
+    
+    
+    
+    else if (c2 < targetC2 && money >= getCost(2)) {
+        tierToBuy = 2;
+    } 
+    
+    
+    
+    else if (c2 === targetC2 && c3 === targetC3 && money >= getCost(1)) {
+        tierToBuy = 1;
+    } 
+    
+    
+    if (tierToBuy) {
+        buyPibbleWasher(tierToBuy);
+        updateDisplay();
+    }
+    
+}
         
         function startAutoPurchaseLoop() {
             if (!autoPurchaseInterval) {
@@ -487,7 +631,13 @@
 
         function recalculateTotalPcs() {
             basePcs = calculateReward(1) + calculateReward(2) + calculateReward(3);
-            pcs = basePcs * boostMultiplier * pcsMultiplier;
+            
+            let currentPcsMultiplier = pcsMultiplier;
+            if (flappyBirdRewardPurchased) {
+                currentPcsMultiplier *= 1.1; 
+            }
+            
+            pcs = basePcs * boostMultiplier * currentPcsMultiplier * pcMultiplier;
         }
 
         const formatNumber = (num) => {
@@ -512,7 +662,13 @@
             moneyDisplay.textContent = formattedMoney; 
             moneyDisplayMobile.textContent = formattedMoney;
             
-            pcsDisplay.textContent = (pcs + basePps).toFixed(1); 
+            
+            const totalPcsWithPps = pcs + (basePps * pcMultiplier); 
+            pcsDisplay.textContent = totalPcsWithPps.toFixed(1); 
+            
+            
+            
+            
             checkButtonStates();
 
             pcsCountSpan1.textContent = pcsIncreaserCount1;
@@ -521,7 +677,8 @@
         }
         
         function handleMainClick() {
-            money += clickValue * boostMultiplier;
+            
+            money += clickValue * boostMultiplier * pcMultiplier; 
             updateDisplay();
         }
 
@@ -529,6 +686,7 @@
             const cost1 = getCost(1);
             const cost2 = getCost(2);
             const cost3 = getCost(3);
+            const rebirthCost = REBIRTH_CONFIG[1].cost;
 
             document.getElementById('buy-pcs-increaser-1').disabled = money < cost1;
             pcsIncreaserCostSpan1.textContent = `${formatCost(cost1)} Pibbcoins`;
@@ -545,333 +703,423 @@
                 if (button) {
                     button.disabled = upgrade.purchased || money < upgrade.cost;
                     const span = button.querySelector('span');
-                    if (span) {
-                        span.textContent = upgrade.purchased ? 'PURCHASED' : `${formatCost(upgrade.cost)} Pibbcoins`;
-                    }
-                    
                     if (upgrade.purchased) {
-                         button.classList.remove('bg-amber-500', 'hover:bg-amber-400', 'text-blue-900');
-                         button.classList.add('bg-lime-700', 'text-white', 'cursor-default');
-                    } else {
-                         button.classList.add('bg-amber-500', 'hover:bg-amber-400', 'text-blue-900');
-                         button.classList.remove('bg-lime-700', 'text-white', 'cursor-default');
+                        button.textContent = 'Purchased';
+                        button.disabled = true;
+                        button.classList.remove('bg-amber-500', 'hover:bg-amber-400');
+                        button.classList.add('bg-lime-500');
                     }
                 }
             }
+            
+            const flappyButton = document.getElementById(FLAPPY_REWARD_UPGRADE.id);
+            if (flappyButton) {
+                flappyButton.disabled = FLAPPY_REWARD_UPGRADE.purchased || !flappyBirdRewardPurchased;
+                if (FLAPPY_REWARD_UPGRADE.purchased) {
+                    flappyButton.textContent = 'Purchased';
+                    flappyButton.disabled = true;
+                    flappyButton.classList.remove('bg-amber-500', 'hover:bg-amber-400');
+                    flappyButton.classList.add('bg-lime-500');
+                } else if (!flappyBirdRewardPurchased) {
+                    flappyButton.querySelector('span').textContent = 'Win Flappy Bird (Score 100+)'
+                } else {
+                    flappyButton.querySelector('span').textContent = 'FREE! (1.1x PCS)'
+                }
+            }
+
+            rebirthButton1.disabled = money < rebirthCost;
+            rebirthCostSpan1.textContent = `${formatCost(rebirthCost)} Pibbcoins`;
         }
 
         function buyPibbleWasher(tier) {
-            let currentCost, costMultiplier;
-
+            let cost, countKey, costKey, costMultiplier, rewardAdd;
+            
             if (tier === 1) {
-                currentCost = pcsIncreaserCost1;
+                cost = pcsIncreaserCost1;
+                countKey = 'pcsIncreaserCount1';
+                costKey = 'pcsIncreaserCost1';
                 costMultiplier = COST_MULTIPLIER_1;
+                rewardAdd = REWARD_ADD_1;
             } else if (tier === 2) {
-                currentCost = pcsIncreaserCost2;
+                cost = pcsIncreaserCost2;
+                countKey = 'pcsIncreaserCount2';
+                costKey = 'pcsIncreaserCost2';
                 costMultiplier = COST_MULTIPLIER_2;
+                rewardAdd = REWARD_ADD_2;
             } else if (tier === 3) {
-                currentCost = pcsIncreaserCost3;
+                cost = pcsIncreaserCost3;
+                countKey = 'pcsIncreaserCount3';
+                costKey = 'pcsIncreaserCost3';
                 costMultiplier = COST_MULTIPLIER_3;
+                rewardAdd = REWARD_ADD_3;
             } else {
                 return;
             }
-
-            const costToPay = Math.ceil(currentCost);
-
-            if (money >= costToPay) {
-                money -= costToPay;
+            
+            if (money >= cost) {
+                money -= cost;
+                this[countKey]++;
+                this[costKey] *= costMultiplier;
                 
-                if (tier === 1) {
-                    pcsIncreaserCount1++;
-                    pcsIncreaserCost1 *= costMultiplier;
-                } else if (tier === 2) {
-                    pcsIncreaserCount2++;
-                    pcsIncreaserCost2 *= costMultiplier;
-                } else if (tier === 3) {
-                    pcsIncreaserCount3++;
-                    pcsIncreaserCost3 *= costMultiplier;
-                }
-
                 recalculateTotalPcs();
-            } 
-        }
-        
-        function buyPermanentUpgrade(key) {
-            const upgrade = PERM_UPGRADES[key];
-            if (money >= upgrade.cost && !upgrade.purchased) {
-                money -= upgrade.cost;
-                upgrade.purchased = true;
-                
-                applyAllPermanentEffects(); 
-                
-                recalculateTotalPcs(); 
                 updateDisplay();
             }
         }
         
-        function applyAllPermanentEffects() {
-            clickValue = 1;
-            basePps = 0;
-            boostDurationSeconds = 30;
-            pcsMultiplier = 1;
-            
-            for (const key in PERM_UPGRADES) {
-                if (PERM_UPGRADES[key].purchased) {
-                    PERM_UPGRADES[key].effect();
-                }
+        function buyPermUpgrade(upgradeKey) {
+            const upgrade = PERM_UPGRADES[upgradeKey];
+            if (upgrade && !upgrade.purchased && money >= upgrade.cost) {
+                money -= upgrade.cost;
+                upgrade.purchased = true;
+                upgrade.effect();
+                recalculateTotalPcs(); 
+                updateDisplay();
+                saveGame();
+                renderPermUpgrades(); 
+            }
+        }
+        
+        function buyFlappyReward() {
+             if (flappyBirdRewardPurchased && !FLAPPY_REWARD_UPGRADE.purchased) {
+                 FLAPPY_REWARD_UPGRADE.purchased = true;
+                 FLAPPY_REWARD_UPGRADE.effect();
+                 recalculateTotalPcs();
+                 updateDisplay();
+                 saveGame();
+                 renderPermUpgrades();
+             }
+        }
+        
+        function handleRebirth(tier) {
+            const config = REBIRTH_CONFIG[tier];
+            if (money >= config.cost) {
+                showConfirmationModal(`Are you sure you want to perform the "${config.name}" Rebirth? You will reset most progress for a ${config.pcReward}x Permanent Click Multiplier!`, () => {
+                    performRebirth(config);
+                });
             }
         }
 
-        const removeGoldenSponge = () => {
-            const existingSponge = document.getElementById('golden-sponge');
-            if (existingSponge) {
-                existingSponge.remove();
-            }
-        };
-        
-        const activateBoost = () => {
+        function performRebirth(config) {
+            pcMultiplier *= config.pcReward;
+            rebirthCount++;
+            
+            money = 0;
+            basePcs = 0;
+            pcs = 0;
+            pcsIncreaserCount1 = 0;
+            pcsIncreaserCost1 = INITIAL_COST_1;
+            pcsIncreaserCount2 = 0;
+            pcsIncreaserCost2 = INITIAL_COST_2;
+            pcsIncreaserCount3 = 0;
+            pcsIncreaserCost3 = INITIAL_COST_3;
+            isAutoPurchaseEnabled = false;
+            toggleAutoPurchaseButton.textContent = 'OFF';
+            stopAutoPurchaseLoop();
+            
+            boostMultiplier = 1;
             clearTimeout(boostTimeout);
             clearInterval(boostInterval);
+            boostTimer.classList.add('hidden');
             
-            boostMultiplier = 3;
-            recalculateTotalPcs();
-            
-            boostTimer.classList.remove('hidden');
-            
-            const boostDuration = boostDurationSeconds * 1000; 
-            const boostEndTime = Date.now() + boostDuration;
-
-            const updateCountdown = () => {
-                const timeLeft = boostEndTime - Date.now();
-                if (timeLeft <= 0) {
-                    clearInterval(boostInterval);
-                    boostMultiplier = 1;
-                    recalculateTotalPcs();
-                    boostTimer.classList.add('hidden');
-                } else {
-                    boostCountdown.textContent = (timeLeft / 1000).toFixed(1) + 's';
-                }
-            };
-            
-            updateCountdown();
-            boostInterval = setInterval(updateCountdown, 100); 
-
-            boostTimeout = setTimeout(() => {
-                clearInterval(boostInterval);
-                boostMultiplier = 1;
-                recalculateTotalPcs();
-                boostTimer.classList.add('hidden');
-            }, boostDuration);
-        };
-
-
-        const spawnGoldenSponge = () => {
-            removeGoldenSponge();
-            clearInterval(spongeInterval);
-
-            const sponge = document.createElement('img');
-            sponge.id = 'golden-sponge';
-            sponge.src = GOLDEN_SPONGE_URL;
-            sponge.className = 'golden-sponge';
-            
-            const bodyRect = document.body.getBoundingClientRect();
-            const spongeSize = 70; 
-            
-            const minX = 20;
-            const minY = 100;
-            const maxX = bodyRect.width - spongeSize - 20;
-            const maxY = bodyRect.height - spongeSize - 20;
-            
-            const randomX = Math.random() * (maxX - minX) + minX;
-            const randomY = Math.random() * (maxY - minY) + minY;
-            const randomRotation = Math.random() * 360;
-            
-            sponge.style.left = `${randomX}px`;
-            sponge.style.top = `${randomY}px`;
-            sponge.style.transform = `rotate(${randomRotation}deg)`;
-            
-            document.body.appendChild(sponge);
-
-            sponge.addEventListener('click', () => {
-                removeGoldenSponge();
-                activateBoost();
-                scheduleNextSpawn(); 
-            });
-            
-            const despawnTimeout = setTimeout(() => {
-                if(document.getElementById('golden-sponge')) {
-                    removeGoldenSponge();
-                    scheduleNextSpawn();
-                }
-            }, 30000);
-            
-            sponge.addEventListener('click', () => {
-                clearTimeout(despawnTimeout); 
-            });
-        };
-
-        const scheduleNextSpawn = () => {
-            clearTimeout(spongeTimeout);
-            clearInterval(spongeInterval);
-            
-            const minTime = 240000; 
-            const maxTime = 360000; 
-            
-            const delay = Math.floor(Math.random() * (maxTime - minTime + 1)) + minTime;
-            const endTime = Date.now() + delay;
-            spongeTimeout = setTimeout(spawnGoldenSponge, delay);
-        };
-        
-        function saveGame() {
-            const permanentUpgradesState = {};
             for (const key in PERM_UPGRADES) {
-                permanentUpgradesState[key] = PERM_UPGRADES[key].purchased;
+                PERM_UPGRADES[key].purchased = false;
             }
+            basePps = 0;
+            pcsMultiplier = 1;
+
+            recalculateTotalPcs();
+            updateDisplay();
+            saveGame();
+            renderPermUpgrades();
             
-            const gameState = {
-                money: money,
-                pcsIncreaserCount1: pcsIncreaserCount1,
-                pcsIncreaserCost1: pcsIncreaserCost1,
-                pcsIncreaserCount2: pcsIncreaserCount2,
-                pcsIncreaserCost2: pcsIncreaserCost2,
-                pcsIncreaserCount3: pcsIncreaserCount3,
-                pcsIncreaserCost3: pcsIncreaserCost3,
-                permUpgrades: permanentUpgradesState,
-                isAutoPurchaseEnabled: isAutoPurchaseEnabled,
-            };
-
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
-            
-            saveStatus.textContent = 'Game Saved!';
-            saveStatus.classList.remove('opacity-0');
-            setTimeout(() => {
-                saveStatus.classList.add('opacity-0');
-            }, 2000);
-        }
-
-        function loadGame() {
-            const savedState = localStorage.getItem(STORAGE_KEY);
-            if (savedState) {
-                const gameState = JSON.parse(savedState);
-                money = gameState.money || 0;
-                pcsIncreaserCount1 = gameState.pcsIncreaserCount1 || 0;
-                pcsIncreaserCost1 = gameState.pcsIncreaserCost1 || INITIAL_COST_1;
-                pcsIncreaserCount2 = gameState.pcsIncreaserCount2 || 0;
-                pcsIncreaserCost2 = gameState.pcsIncreaserCost2 || INITIAL_COST_2;
-                pcsIncreaserCount3 = gameState.pcsIncreaserCount3 || 0;
-                pcsIncreaserCost3 = gameState.pcsIncreaserCost3 || INITIAL_COST_3;
-                isAutoPurchaseEnabled = gameState.isAutoPurchaseEnabled === true;
-
-                if (gameState.permUpgrades) {
-                    for (const key in gameState.permUpgrades) {
-                        if (PERM_UPGRADES[key]) {
-                            PERM_UPGRADES[key].purchased = gameState.permUpgrades[key];
-                        }
-                    }
-                }
-            } else {
-                money = 0;
-                pcsIncreaserCount1 = 0;
-                pcsIncreaserCost1 = INITIAL_COST_1;
-                pcsIncreaserCount2 = 0;
-                pcsIncreaserCost2 = INITIAL_COST_2;
-                pcsIncreaserCount3 = 0;
-                pcsIncreaserCost3 = INITIAL_COST_3;
-                isAutoPurchaseEnabled = false;
-                for (const key in PERM_UPGRADES) {
-                    PERM_UPGRADES[key].purchased = false;
-                }
-            }
-            
-            applyAllPermanentEffects();
-            recalculateTotalPcs(); 
-            updateAutoPurchaseButton();
-            updateDisplay(); 
-        }
-
-        function resetGame() {
-            localStorage.removeItem(STORAGE_KEY);
-            loadGame(); 
-            if (autoPurchaseInterval) {
-                stopAutoPurchaseLoop();
-            }
-            scheduleNextSpawn();
-            settingsModal.classList.add('hidden');
-            confirmationModal.classList.add('hidden');
-        }
-
-        function updateAutoPurchaseButton() {
-            if (isAutoPurchaseEnabled) {
-                toggleAutoPurchaseButton.textContent = 'ON';
-                toggleAutoPurchaseButton.classList.remove('bg-gray-500', 'hover:bg-gray-400');
-                toggleAutoPurchaseButton.classList.add('bg-lime-500', 'hover:bg-lime-400', 'text-blue-900');
-                startAutoPurchaseLoop();
-            } else {
-                toggleAutoPurchaseButton.textContent = 'OFF';
-                toggleAutoPurchaseButton.classList.remove('bg-lime-500', 'hover:bg-lime-400', 'text-blue-900');
-                toggleAutoPurchaseButton.classList.add('bg-gray-500', 'hover:bg-gray-400');
-                stopAutoPurchaseLoop();
-            }
+            alert(`Rebirth successful! Permanent Click Multiplier is now ${pcMultiplier}x. Happy clicking!`);
         }
         
-        document.addEventListener('DOMContentLoaded', () => {
-            loadGame();
-            startGameLoop();
-            scheduleNextSpawn();
+        function renderPermUpgrades() {
+            permUpgradesContainer.innerHTML = ''; 
             
-            const storeContainer = document.getElementById('store-content-container');
+            if (flappyBirdRewardPurchased || FLAPPY_REWARD_UPGRADE.purchased) {
+                 const upgrade = FLAPPY_REWARD_UPGRADE;
+                 const item = document.createElement('div');
+                 item.className = 'flex flex-col sm:flex-row justify-between items-center bg-blue-700/70 p-4 rounded-lg shadow-inner shadow-blue-900/50 transition duration-200 ' + (upgrade.purchased ? 'bg-lime-700/70' : 'hover:bg-blue-600/70');
+                 item.innerHTML = `
+                     <div class="mb-2 sm:mb-0 text-center sm:text-left">
+                         <p class="text-xl font-bold">${upgrade.name}</p>
+                         <p class="text-sm text-fuchsia-300 font-mono mt-0.5">${upgrade.desc}</p>
+                     </div>
+                     <button 
+                         id="${upgrade.id}" 
+                         class="buy-button w-full sm:w-auto px-6 py-2 rounded-xl font-bold text-blue-900 transition duration-150 shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] ${upgrade.purchased ? 'bg-lime-500' : 'bg-amber-500 hover:bg-amber-400'}"
+                         data-perm-key="flappyBirdReward"
+                         ${upgrade.purchased ? 'disabled' : ''}
+                     >
+                         <span>${upgrade.purchased ? 'Purchased' : (flappyBirdRewardPurchased ? 'FREE! (1.1x PCS)' : 'Win Flappy Bird (Score 100+)')}</span>
+                     </button>
+                 `;
+                 permUpgradesContainer.appendChild(item);
+                 
+                 const button = document.getElementById(upgrade.id);
+                 if (button && !upgrade.purchased) {
+                      button.addEventListener('click', () => buyFlappyReward());
+                 }
+            }
+
             for (const key in PERM_UPGRADES) {
                 const upgrade = PERM_UPGRADES[key];
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'flex flex-col sm:flex-row justify-between items-center bg-blue-700/70 p-4 rounded-lg shadow-inner shadow-blue-900/50 hover:bg-blue-600/70 transition duration-200';
-                itemDiv.innerHTML = `
+                const item = document.createElement('div');
+                item.className = 'flex flex-col sm:flex-row justify-between items-center bg-blue-700/70 p-4 rounded-lg shadow-inner shadow-blue-900/50 transition duration-200 ' + (upgrade.purchased ? 'bg-lime-700/70' : 'hover:bg-blue-600/70');
+                item.innerHTML = `
                     <div class="mb-2 sm:mb-0 text-center sm:text-left">
                         <p class="text-xl font-bold">${upgrade.name}</p>
                         <p class="text-sm text-fuchsia-300 font-mono mt-0.5">${upgrade.desc}</p>
                     </div>
                     <button 
                         id="${upgrade.id}" 
-                        class="buy-perm-button w-full sm:w-auto px-6 py-2 bg-amber-500 hover:bg-amber-400 rounded-xl font-bold text-blue-900 transition duration-150 shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
-                        data-upgrade-key="${key}"
+                        class="buy-button w-full sm:w-auto px-6 py-2 rounded-xl font-bold text-blue-900 transition duration-150 shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] ${upgrade.purchased ? 'bg-lime-500' : 'bg-amber-500 hover:bg-amber-400'}"
+                        data-perm-key="${key}"
+                        ${upgrade.purchased ? 'disabled' : ''}
                     >
-                        <span>${formatCost(upgrade.cost)} Pibbcoins</span>
+                        <span>${upgrade.purchased ? 'Purchased' : `${formatCost(upgrade.cost)} Pibbcoins`}</span>
                     </button>
                 `;
-                storeContainer.appendChild(itemDiv);
+                permUpgradesContainer.appendChild(item);
             }
             
-            document.querySelectorAll('.buy-perm-button').forEach(button => {
-                button.addEventListener('click', () => {
-                    buyPermanentUpgrade(button.dataset.upgradeKey);
-                });
+            permUpgradesContainer.querySelectorAll('.buy-button').forEach(button => {
+                const key = button.getAttribute('data-perm-key');
+                if (key !== 'flappyBirdReward' && !PERM_UPGRADES[key].purchased) {
+                    button.addEventListener('click', () => buyPermUpgrade(key));
+                }
             });
             
             checkButtonStates();
-        });
+        }
 
 
+        function saveGame() {
+            const saveObject = {
+                money,
+                pcsIncreaserCount1,
+                pcsIncreaserCost1,
+                pcsIncreaserCount2,
+                pcsIncreaserCost2,
+                pcsIncreaserCount3,
+                pcsIncreaserCost3,
+                pcMultiplier,
+                rebirthCount,
+                permUpgrades: {},
+                basePps,
+                pcsMultiplier: 1,
+                isAutoPurchaseEnabled,
+                flappyBirdRewardPurchased,
+                flappyRewardPurchased: FLAPPY_REWARD_UPGRADE.purchased
+            };
+            
+            for (const key in PERM_UPGRADES) {
+                saveObject.permUpgrades[key] = {
+                    purchased: PERM_UPGRADES[key].purchased
+                };
+            }
+            
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(saveObject));
+        }
+
+        function loadGame() {
+            const savedData = localStorage.getItem(STORAGE_KEY);
+            if (!savedData) {
+                console.log('No saved game found.');
+                return;
+            }
+            
+            const saveObject = JSON.parse(savedData);
+            
+            money = saveObject.money || 0;
+            pcsIncreaserCount1 = saveObject.pcsIncreaserCount1 || 0;
+            pcsIncreaserCost1 = saveObject.pcsIncreaserCost1 || INITIAL_COST_1;
+            pcsIncreaserCount2 = saveObject.pcsIncreaserCount2 || 0;
+            pcsIncreaserCost2 = saveObject.pcsIncreaserCost2 || INITIAL_COST_2;
+            pcsIncreaserCount3 = saveObject.pcsIncreaserCount3 || 0;
+            pcsIncreaserCost3 = saveObject.pcsIncreaserCost3 || INITIAL_COST_3;
+            pcMultiplier = saveObject.pcMultiplier || 1;
+            rebirthCount = saveObject.rebirthCount || 0;
+            basePps = saveObject.basePps || 0;
+            isAutoPurchaseEnabled = saveObject.isAutoPurchaseEnabled || false;
+            flappyBirdRewardPurchased = saveObject.flappyBirdRewardPurchased || false;
+            FLAPPY_REWARD_UPGRADE.purchased = saveObject.flappyRewardPurchased || false;
+            
+            pcsMultiplier = 1;
+            
+            if (saveObject.permUpgrades) {
+                for (const key in saveObject.permUpgrades) {
+                    if (PERM_UPGRADES[key]) {
+                        PERM_UPGRADES[key].purchased = saveObject.permUpgrades[key].purchased;
+                        if (PERM_UPGRADES[key].purchased) {
+                            PERM_UPGRADES[key].effect();
+                        }
+                    }
+                }
+            }
+
+            if (FLAPPY_REWARD_UPGRADE.purchased) {
+                 FLAPPY_REWARD_UPGRADE.effect();
+            }
+            
+            toggleAutoPurchaseButton.textContent = isAutoPurchaseEnabled ? 'ON' : 'OFF';
+            toggleAutoPurchaseButton.classList.remove('bg-red-600', 'bg-lime-500');
+            toggleAutoPurchaseButton.classList.add(isAutoPurchaseEnabled ? 'bg-lime-500' : 'bg-red-600');
+            if (isAutoPurchaseEnabled) {
+                startAutoPurchaseLoop();
+            }
+
+            recalculateTotalPcs();
+            updateDisplay();
+            renderPermUpgrades();
+            console.log('Game loaded successfully.');
+        }
+
+        function resetGame() {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload(); 
+        }
+
+        function startBoost() {
+            if (boostMultiplier === 1) {
+                boostMultiplier = 3;
+                boostTimer.classList.remove('hidden');
+                
+                let remainingTime = boostDurationSeconds;
+                
+                boostCountdown.textContent = `${remainingTime.toFixed(1)}s`;
+                
+                recalculateTotalPcs();
+                updateDisplay();
+
+                clearInterval(boostInterval);
+                boostInterval = setInterval(() => {
+                    remainingTime -= 0.1;
+                    boostCountdown.textContent = `${remainingTime.toFixed(1)}s`;
+                    
+                    if (remainingTime <= 0) {
+                        endBoost();
+                    }
+                }, 100);
+                
+                clearTimeout(boostTimeout);
+                boostTimeout = setTimeout(endBoost, boostDurationSeconds * 1000);
+            }
+        }
+
+        function endBoost() {
+            boostMultiplier = 1;
+            boostTimer.classList.add('hidden');
+            clearInterval(boostInterval);
+            recalculateTotalPcs();
+            updateDisplay();
+        }
+
+        function spawnGoldenSponge() {
+            const sponge = document.createElement('img');
+            sponge.src = GOLDEN_SPONGE_URL;
+            sponge.className = 'golden-sponge fixed hidden';
+            
+            const top = Math.random() * 80 + 10;
+            const left = Math.random() * 80 + 10;
+            
+            sponge.style.top = `${top}vh`;
+            sponge.style.left = `${left}vw`;
+            sponge.style.transform = `translate(-50%, -50%) scale(1)`;
+
+            document.body.appendChild(sponge);
+            
+            setTimeout(() => {
+                 sponge.classList.remove('hidden');
+            }, 10);
+            
+            sponge.addEventListener('click', () => {
+                startBoost();
+                sponge.style.opacity = '0';
+                sponge.style.transform = 'translate(-50%, -50%) scale(0.5)';
+                setTimeout(() => sponge.remove(), 300);
+                clearTimeout(spongeTimeout);
+                scheduleNextSponge();
+            });
+            
+            spongeTimeout = setTimeout(() => {
+                sponge.style.opacity = '0';
+                sponge.style.transform = 'translate(-50%, -50%) scale(0.5)';
+                setTimeout(() => sponge.remove(), 300);
+                scheduleNextSponge();
+            }, 10000);
+        }
+
+        function scheduleNextSponge() {
+            const randomDelay = (Math.random() * 60 + 60) * 1000; 
+            spongeInterval = setTimeout(spawnGoldenSponge, randomDelay);
+            console.log(`Next Golden Sponge scheduled in ${Math.round(randomDelay / 1000)} seconds.`);
+        }
+        
+        function showConfirmationModal(text, onConfirm) {
+            confirmationText.textContent = text;
+            confirmationModal.classList.remove('hidden');
+
+            const handleConfirm = () => {
+                onConfirm();
+                closeConfirmationModal();
+            };
+
+            confirmActionButton.onclick = handleConfirm;
+            cancelActionButton.onclick = closeConfirmationModal;
+        }
+
+        function closeConfirmationModal() {
+            confirmationModal.classList.add('hidden');
+            confirmActionButton.onclick = null;
+            cancelActionButton.onclick = null;
+        }
+
+        function showSaveStatus(message, isError = false) {
+            saveStatus.textContent = message;
+            saveStatus.classList.remove('opacity-0', 'text-lime-400', 'text-red-400');
+            saveStatus.classList.add('opacity-100', isError ? 'text-red-400' : 'text-lime-400');
+            
+            setTimeout(() => {
+                saveStatus.classList.remove('opacity-100');
+                saveStatus.classList.add('opacity-0');
+            }, 3000);
+        }
+        
+        function toggleFlappyBird() {
+            flappyGame.classList.toggle('hidden');
+        }
+        
         clickerSquare.addEventListener('mousedown', () => {
             clickerSquare.classList.add('clicked');
             clickerSquare.src = CLICK_DOWN_IMAGE_SRC;
+            handleMainClick();
         });
-
+        
         clickerSquare.addEventListener('mouseup', () => {
             clickerSquare.classList.remove('clicked');
             clickerSquare.src = DEFAULT_IMAGE_SRC;
-            handleMainClick();
         });
-
-        clickerSquare.addEventListener('mouseleave', () => {
+        
+        clickerSquare.addEventListener('touchstart', (e) => {
+            e.preventDefault(); 
+            clickerSquare.classList.add('clicked');
+            clickerSquare.src = CLICK_DOWN_IMAGE_SRC;
+            handleMainClick();
+        }, { passive: false });
+        
+        clickerSquare.addEventListener('touchend', (e) => {
+            e.preventDefault(); 
             clickerSquare.classList.remove('clicked');
             clickerSquare.src = DEFAULT_IMAGE_SRC;
-        });
-
+        }, { passive: false });
 
         buyButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const tier = parseInt(button.dataset.tier);
+            button.addEventListener('click', (e) => {
+                const tier = parseInt(e.currentTarget.getAttribute('data-tier'));
                 buyPibbleWasher(tier);
-                updateDisplay();
             });
         });
         
@@ -883,30 +1131,185 @@
             settingsModal.classList.add('hidden');
         });
         
-        saveButton.addEventListener('click', saveGame);
+        saveButton.addEventListener('click', () => {
+            saveGame();
+            showSaveStatus('Game saved successfully!');
+        });
         
         restartButton.addEventListener('click', () => {
-            confirmationText.textContent = 'Are you sure you want to restart? All progress will be lost.';
-            confirmActionButton.textContent = 'Yes, Restart';
-            confirmActionButton.onclick = resetGame;
-            confirmationModal.classList.remove('hidden');
-        });
-
-        cancelActionButton.addEventListener('click', () => {
-            confirmationModal.classList.add('hidden');
+            showConfirmationModal('Are you sure you want to restart all progress? This cannot be undone and you must click the Save button once before continuing to keep your progress.', () => {
+                resetGame();
+            });
         });
         
         toggleAutoPurchaseButton.addEventListener('click', () => {
             isAutoPurchaseEnabled = !isAutoPurchaseEnabled;
-            updateAutoPurchaseButton();
-        });
-        
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'F9') {
-                event.preventDefault();
-                window.open('https://fed.education.qld.gov.au/idp/SSO.saml2?SAMLRequest=fVJbT8IwFH73Vyx9X3eBwdIACUKMJCiETR98MaU7gyZdO3pB%2Ffd2QyM%2B6OvX73bO6cTQRrRk7uxR7uDkwNjgvRHSkP5hipyWRFHDDZG0AUMsI8X8YU1SHJNWK6uYEuhK8r%2BCGgPaciVRsFpO0Ws2qigM8jwcZOM8HOZ7CPf1iIUJZGmSs3GcMoaCZ9DGa6bIW3ihMQ5W0lgqrYfiNAuTNIyHZTwmyZgM8xcULP0cXFLbq47WtoZEUQ0VhsqxHsYnUeGDOmPqIl61UVFscNc%2FRcH8u%2BRCSeMa0AXoM2fwtFv%2FmJ0EUC0xnDrLzkSoA5dRZ4GC7ddibrmsuDz8v5P9hWTIfVluw%2B2mKNFs0vmQflI96yK7RF%2Bf%2B7G1Y9ZpwEw1fVw6ia7Zk8tFH33OarlVgrOP4E7phtq%2FayQ46RFehXVPJU6aFhivOVR%2BIUKot4UGamGKfD6gaHYJ%2Ff1zZjef', '_blank'); // Open Google in a new tab
+            toggleAutoPurchaseButton.textContent = isAutoPurchaseEnabled ? 'ON' : 'OFF';
+            toggleAutoPurchaseButton.classList.remove('bg-red-600', 'bg-lime-500');
+            toggleAutoPurchaseButton.classList.add(isAutoPurchaseEnabled ? 'bg-lime-500' : 'bg-red-600');
+
+            if (isAutoPurchaseEnabled) {
+                startAutoPurchaseLoop();
+            } else {
+                stopAutoPurchaseLoop();
             }
         });
+        
+        rebirthButton1.addEventListener('click', () => {
+            handleRebirth(1);
+        });
+        
+        flappyToggleButton.addEventListener('click', toggleFlappyBird);
+
+        loadGame();
+        startGameLoop();
+        scheduleNextSponge(); 
+        
+        const canvas = document.getElementById('flappy-canvas');
+        const ctx = canvas.getContext('2d');
+        const WIDTH = canvas.width;
+        const HEIGHT = canvas.height;
+
+        let birdY = HEIGHT / 2;
+        let birdVelocity = 0;
+        const gravity = 0.5;
+        const jumpStrength = -8;
+        let score = 0;
+        let isFlappyGameOver = true;
+        let pipes = [];
+        let pipeGap = 80;
+        let pipeWidth = 20;
+        let frameCount = 0;
+        let gameSpeed = 2;
+        const PIPE_INTERVAL = 100;
+
+        function drawBird() {
+            ctx.fillStyle = 'yellow';
+            ctx.fillRect(50, birdY, 15, 15);
+        }
+
+        function drawPipe(pipe) {
+            ctx.fillStyle = 'green';
+            ctx.fillRect(pipe.x, 0, pipeWidth, pipe.top);
+            ctx.fillRect(pipe.x, pipe.bottom, pipeWidth, HEIGHT - pipe.bottom);
+        }
+
+        function updateFlappyGame() {
+            if (isFlappyGameOver) return;
+            
+            birdVelocity += gravity;
+            birdY += birdVelocity;
+
+            if (birdY > HEIGHT - 15 || birdY < 0) {
+                gameOver();
+                return;
+            }
+
+            if (frameCount % PIPE_INTERVAL === 0) {
+                const minHeight = 40;
+                const maxHeight = HEIGHT - pipeGap - minHeight;
+                const topHeight = Math.floor(Math.random() * (maxHeight - minHeight)) + minHeight;
+                pipes.push({
+                    x: WIDTH,
+                    top: topHeight,
+                    bottom: topHeight + pipeGap,
+                    passed: false
+                });
+            }
+
+            for (let i = 0; i < pipes.length; i++) {
+                const pipe = pipes[i];
+                pipe.x -= gameSpeed;
+                
+                if (50 < pipe.x + pipeWidth && 65 > pipe.x) {
+                    if (birdY < pipe.top || birdY + 15 > pipe.bottom) {
+                        gameOver();
+                        return;
+                    }
+                }
+                
+                if (pipe.x + pipeWidth < 50 && !pipe.passed) {
+                    score++;
+                    pipe.passed = true;
+                    if (score > 0 && score % 10 === 0) {
+                         gameSpeed += 0.2;
+                    }
+                }
+            }
+
+            pipes = pipes.filter(pipe => pipe.x > -pipeWidth);
+            frameCount++;
+        }
+
+        function renderFlappyGame() {
+            ctx.clearRect(0, 0, WIDTH, HEIGHT); 
+            pipes.forEach(drawPipe);
+            drawBird();
+
+            ctx.fillStyle = 'black';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Score: ${score}`, 10, 25);
+            
+            if (isFlappyGameOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(0, 0, WIDTH, HEIGHT);
+                ctx.fillStyle = 'white';
+                ctx.font = '24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('FLAPPY PIBBLE!', WIDTH / 2, HEIGHT / 2 - 40);
+                ctx.font = '16px Arial';
+                ctx.fillText(`Final Score: ${score}`, WIDTH / 2, HEIGHT / 2);
+                ctx.fillText('Click to Start/Flap', WIDTH / 2, HEIGHT / 2 + 30);
+                ctx.textAlign = 'left';
+
+                if (score >= 100 && !flappyBirdRewardPurchased) {
+                    flappyBirdRewardPurchased = true;
+                    saveGame();
+                    renderPermUpgrades();
+                }
+            }
+        }
+
+        let flappyGameLoop;
+        function flappyLoop() {
+            updateFlappyGame();
+            renderFlappyGame();
+            flappyGameLoop = requestAnimationFrame(flappyLoop);
+        }
+
+        function flappyJump() {
+            if (isFlappyGameOver) {
+                isFlappyGameOver = false;
+                birdY = HEIGHT / 2;
+                birdVelocity = 0;
+                score = 0;
+                pipes = [];
+                frameCount = 0;
+                gameSpeed = 2; 
+                birdVelocity = jumpStrength; 
+                if (!flappyGameLoop) {
+                    flappyLoop();
+                }
+            } else {
+                birdVelocity = jumpStrength;
+            }
+        }
+
+        function gameOver() {
+            isFlappyGameOver = true;
+            renderFlappyGame();
+        }
+
+        canvas.addEventListener('click', flappyJump);
+        window.addEventListener('keydown', (e) => {
+             if (e.code === 'Space' && !flappyGame.classList.contains('hidden')) {
+                e.preventDefault();
+                flappyJump();
+            }
+        });
+        
+        flappyLoop();
+        
     </script>
 </body>
 </html>
