@@ -264,6 +264,10 @@
                         0
                     </p>
                 </div>
+                <div id="log-list-container" class="w-80 ml-4 mt-2 self-start" style="max-width:22rem;">
+                    <h3 class="text-xl font-bold text-blue-200 mb-2">Coin Log</h3>
+                    <ul id="log-list" class="bg-gray-900/80 rounded-lg p-3 text-sm max-h-40 overflow-y-auto shadow-inner"></ul>
+                </div>
             </div>
             
         </header>
@@ -375,6 +379,7 @@
                         OFF
                     </button>
                 </div>
+                
                 <button id="save-button" class="w-full px-6 py-3 bg-lime-500 hover:bg-lime-400 rounded-xl font-bold text-blue-900 transition duration-150 shadow-lg transform hover:scale-[1.02] active:scale-[0.98]">
                     💾 Save
                 </button>
@@ -387,7 +392,6 @@
                 <p id="save-status" class="text-center text-sm text-lime-400 mt-2 opacity-0 transition duration-300"></p>
             </div>
         </div>
-        
     </div>
     
     <div id="confirmation-modal" class="modal fixed inset-0 flex items-center justify-center p-4 z-50 hidden">
@@ -532,11 +536,26 @@
         let boostTimeout;
         let spongeTimeout;
         let spongeInterval;
+
+        const logList = document.getElementById('log-list');
+        function addLogEntry(msg) {
+            if (!logList) return;
+            const entry = document.createElement('li');
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logList.insertBefore(entry, logList.firstChild);
+            while (logList.children.length > 30) logList.removeChild(logList.lastChild);
+        }
         
 
         function gameLoop() {
-            money += pcs; 
-            money += basePps * pcMultiplier; 
+            if (pcs > 0) {
+                money += pcs;
+                addLogEntry(`Pibble Washers earned ${pcs.toFixed(1)} coins.`);
+            }
+            if (basePps * pcMultiplier > 0) {
+                money += basePps * pcMultiplier;
+                addLogEntry(`Earned ${(basePps * pcMultiplier).toFixed(1)} coins from passive PPS.`);
+            }
             updateDisplay(); 
         }
 
@@ -671,8 +690,9 @@
         }
         
         function handleMainClick() {
-            
-            money += clickValue * boostMultiplier * pcMultiplier; 
+            const earned = clickValue * boostMultiplier * pcMultiplier;
+            money += earned;
+            addLogEntry(`Clicked! Earned ${earned.toFixed(1)} coins.`);
             updateDisplay();
         }
 
@@ -729,36 +749,36 @@
             return initialCost * Math.pow(multiplier, count);
         }
 
+        let isBuying = false;
+
         function buyPibbleWasher(tier) {
-            let currentCost;
-            let currentCount;
-            let initialCost;
-            let costMultiplier;
-            let rewardAdd; 
+            if (isBuying) return;
+            isBuying = true;
+
+            let currentCost, currentCount, initialCost, costMultiplier;
 
             if (tier === 1) {
                 currentCost = pcsIncreaserCost1;
                 currentCount = pcsIncreaserCount1;
                 initialCost = INITIAL_COST_1;
                 costMultiplier = COST_MULTIPLIER_1;
-                rewardAdd = REWARD_ADD_1;
             } else if (tier === 2) {
                 currentCost = pcsIncreaserCost2;
                 currentCount = pcsIncreaserCount2;
                 initialCost = INITIAL_COST_2;
                 costMultiplier = COST_MULTIPLIER_2;
-                rewardAdd = REWARD_ADD_2;
             } else if (tier === 3) {
                 currentCost = pcsIncreaserCost3;
                 currentCount = pcsIncreaserCount3;
                 initialCost = INITIAL_COST_3;
                 costMultiplier = COST_MULTIPLIER_3;
-                rewardAdd = REWARD_ADD_3;
             } else {
+                isBuying = false;
                 return;
             }
 
             if (money < currentCost) {
+                isBuying = false;
                 return;
             }
 
@@ -777,10 +797,15 @@
                 pcsIncreaserCount3 = currentCount;
                 pcsIncreaserCost3 = nextCost;
             }
-    
-            recalculateTotalPcs(); 
 
+            recalculateTotalPcs();
             updateDisplay();
+
+            if (document.activeElement) {
+                document.activeElement.blur(); 
+            }
+
+            setTimeout(() => { isBuying = false; }, 50);
         }
 
         buyButtons.forEach(button => {
@@ -1042,39 +1067,49 @@
         }
 
         function spawnGoldenSponge() {
-            const sponge = document.createElement('img');
-            sponge.src = GOLDEN_SPONGE_URL;
-            sponge.className = 'golden-sponge fixed hidden';
-            
-            const top = Math.random() * 80 + 10;
-            const left = Math.random() * 80 + 10;
-            
-            sponge.style.top = `${top}vh`;
-            sponge.style.left = `${left}vw`;
-            sponge.style.transform = `translate(-50%, -50%) scale(1)`;
+    const sponge = document.createElement('img');
+    sponge.src = GOLDEN_SPONGE_URL;
+    
+    sponge.className = 'golden-sponge fixed hidden';
+    sponge.style.zIndex = '9999';
+    sponge.style.cursor = 'pointer';
 
-            document.body.appendChild(sponge);
-            
-            setTimeout(() => {
-                 sponge.classList.remove('hidden');
-            }, 10);
-            
-            sponge.addEventListener('click', () => {
-                startBoost();
-                sponge.style.opacity = '0';
-                sponge.style.transform = 'translate(-50%, -50%) scale(0.5)';
-                setTimeout(() => sponge.remove(), 300);
-                clearTimeout(spongeTimeout);
-                scheduleNextSponge();
-            });
-            
-            spongeTimeout = setTimeout(() => {
-                sponge.style.opacity = '0';
-                sponge.style.transform = 'translate(-50%, -50%) scale(0.5)';
-                setTimeout(() => sponge.remove(), 300);
-                scheduleNextSponge();
-            }, 10000);
-        }
+    const top = Math.random() * 80 + 10;
+    const left = Math.random() * 80 + 10;
+
+    sponge.style.top = `${top}vh`;
+    sponge.style.left = `${left}vw`;
+    sponge.style.transform = `translate(-50%, -50%) scale(1)`;
+
+    const handleClick = () => {
+        sponge.style.pointerEvents = 'none'; 
+        
+        startBoost();
+        
+        sponge.style.opacity = '0';
+        sponge.style.transform = 'translate(-50%, -50%) scale(0.5)';
+        
+        clearTimeout(spongeTimeout);
+        setTimeout(() => sponge.remove(), 300);
+        scheduleNextSponge();
+    };
+
+    sponge.addEventListener('mousedown', handleClick); // 'mousedown' is faster than 'click'
+
+    document.body.appendChild(sponge);
+
+    requestAnimationFrame(() => {
+        sponge.classList.remove('hidden');
+    });
+
+    const spongeTimeout = setTimeout(() => {
+        sponge.style.pointerEvents = 'none';
+        sponge.style.opacity = '0';
+        sponge.style.transform = 'translate(-50%, -50%) scale(0.5)';
+        setTimeout(() => sponge.remove(), 300);
+        scheduleNextSponge();
+    }, 10000);
+}
 
         function scheduleNextSponge() {
             const randomDelay = (Math.random() * 60 + 60) * 1000; 
@@ -1334,6 +1369,15 @@
             }
         });
         
+        setInterval(() => {
+            saveGame();
+            console.log("Game Auto-saved!");
+        }, 30000);
+
+        window.addEventListener("beforeunload", () => {
+            saveGame();
+        });
+
         flappyLoop();
         
         document.addEventListener("keydown", function (e) {
